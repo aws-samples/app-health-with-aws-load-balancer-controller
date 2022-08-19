@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+  namespace: default
+  labels:
+    app: django-app
+spec:
+  selector:
+    matchLabels:
+      app: django-app
+  template:
+    metadata:
+      labels:
+        app: django-app
+    spec:
+      containers:
+        - name: app
+          lifecycle:
+            preStop:
+              exec:
+                # Allow existing requests complete within 120 seconds
+                command: ["/bin/sh", "-c", "sed -i 's/health/nothealthy/g' /usr/src/app/logistics/health.py && sleep 120"]
+          readinessProbe:
+            httpGet:
+              path: /logistics/health
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          image: 604429864555.dkr.ecr.us-west-2.amazonaws.com/djangoapp:py39aarch64
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 512m
+              memory: 512Mi
+          ports:
+            - containerPort: 8000
+#      terminationGracePeriodSeconds: 120

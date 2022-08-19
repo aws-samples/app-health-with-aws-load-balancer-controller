@@ -1,0 +1,92 @@
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: appsimulator
+  namespace: default
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - "*"
+  verbs:
+  - "*"
+- apiGroups:
+  - rbac.authorization.k8s.io
+  - extensions
+  - apps
+  resources:
+  - "*"
+  verbs:
+  - "*"
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  - pods
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: appsimulator
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: appsimulator
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: appsimulator
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: appsimulator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: appsimulator
+  name: appsimulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appsimulator
+  template:
+    metadata:
+      labels:
+        app: appsimulator
+    spec:
+      nodeSelector:
+        alpha.eksctl.io/nodegroup-name: lb-health-arm-ng-1
+      serviceAccountName: appsimulator
+      containers:
+      - env:
+        - name: MIN_SLEEP_BETWEEN_CYCLE
+          value: "10"
+        - name: MAX_SLEEP_BETWEEN_CYCLE
+          value: "12"
+        - name: QUEUE_URL
+          value: "https://sqs.us-west-2.amazonaws.com/604429864555/vertscaler-state"
+        - name: APP_QUEUE_URL
+          value: "https://sqs.us-west-2.amazonaws.com/604429864555/db"
+        - name: DEPLOY_NAME
+          value: "appsimulator"
+        image: 604429864555.dkr.ecr.us-west-2.amazonaws.com/loader:py39aarch64
+        imagePullPolicy: Always
+        name: appsimulator
+        command: ["/appsimulator.sh"]
+        resources:
+          requests:
+            cpu: 128m
+            memory: 128Mi

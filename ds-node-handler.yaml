@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-handler
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: node-handler
+  template:
+    metadata:
+      labels:
+        app: node-handler
+    spec:
+      serviceAccountName: appsimulator
+      #hostNetwork: true
+      containers:
+      - name: node-handler
+        image: 604429864555.dkr.ecr.us-west-2.amazonaws.com/loader:py39aarch64
+        imagePullPolicy: Always
+        command: ["/ds-node-handler.sh"]
+        env:
+        - name: NAMESPACE
+          value: default
+        - name: POLL_INTERVAL
+          value: "5"
+        - name: CW_NAMESPACE
+          value: appsimulator
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace

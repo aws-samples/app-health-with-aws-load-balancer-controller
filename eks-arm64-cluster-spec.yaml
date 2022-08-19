@@ -1,0 +1,36 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: lb-health-arm
+  version: "1.21"
+  region: us-west-2
+
+kubernetesNetworkConfig:
+  ipFamily: IPv4
+
+vpc:
+  clusterEndpoints:
+    publicAccess: true
+    privateAccess: true
+
+iam:
+  withOIDC: true
+
+addons:
+  - name: vpc-cni
+  - name: coredns
+  - name: kube-proxy
+
+
+managedNodeGroups:
+  - instanceType: "t4g.xlarge"
+    amiFamily: AmazonLinux2
+    name: lb-health-arm-ng-1
+    desiredCapacity: 1
+    maxSize: 10
+    minSize: 1
+    tags:
+      project: dk
+    labels:
+      project: dk
