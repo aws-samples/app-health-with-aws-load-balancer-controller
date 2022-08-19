@@ -115,6 +115,9 @@ From [application Kubernetes spec](./django-deploy.yaml)
 
 We can see that the number of 504 erros dropped from average of 340 during scale down event to 0 and 502 errors from 200 during scale down event to 30. Note that the 502 errors did not effect the users as it was sent by the pod to kubelet and ALB control plane before decomimissioning the container.  
 
+## Conclusion
+Scalable applications require seamless expansion and contraction of their capacity without affecting their users. Therefore, it is necessary to allow the hosting platform to terminate application instances gracefully. The EKS and AWS Load Balancer controller make it easy by assessing the app's readiness to serve users with Pod readiness gates. To facilitate graceful termination, application developers must handle the SIGTERM signal and implement application health checks that do not serve users.
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
