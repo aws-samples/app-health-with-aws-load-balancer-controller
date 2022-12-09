@@ -50,10 +50,14 @@ cd load_simu_app
 * deploy app and load simulator
 
 ```bash
-kubectl apply -f django-deploy.yaml
-kubectl apply -f django-svc.yaml
-kubectl apply -f django-ingres.yaml
+kubectl apply -f django-svc-ingress-deploy-before.yaml
 kubectl apply -f appsimulator.yaml
+```
+let it run for 30 min and then apply the changes that consider the app health without impacting the user
+
+
+```bash
+kubectl apply -f django-svc-ingress-deploy-after.yaml
 ```
 
 ## Evaluation
@@ -76,7 +80,7 @@ We implemented a new [application health functionality](logistics_app/logisitcs/
 
 * Configure Kubernetes [readinessProbe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) to  `/logisitics/health` URI with a frequency that is less or equal than [alb.ingress.kubernetes.io/healthcheck-interval-seconds](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/ingress/annotations/) so the kubelet will mark the container as not available roughly at the same time.
 
-From [Kuberentes Ingress spec](./django-ingres.yaml)
+From [Kuberentes Ingress spec](./django-svc-ingress-deploy-after.yaml)
 ```yaml
 kind: Ingress
 metadata:
@@ -88,7 +92,7 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '3'
 ```
 
-From [application Kubernetes spec](./django-deploy.yaml)
+From [application Kubernetes spec](./django-svc-ingress-deploy-after.yaml)
 ```yaml
           readinessProbe:
             httpGet:
@@ -100,7 +104,7 @@ From [application Kubernetes spec](./django-deploy.yaml)
 
 * Configure a [preStop hook](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/) that will cause the container's health to be unhealthy. The kubelet send [SIGTERM](https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/) to all running containers after the Kubernetes node marked for termination by [cluster autoscaler](https://github.com/kubernetes/autoscaler) or [karpenter](https://karpenter.sh). Our method is to modify Django health to unhealthy and break the `/logisitics/health` URI while still processing live users' `/logistics` requests.
 
-From [application Kubernetes spec](./django-deploy.yaml)
+From [application Kubernetes spec](./django-svc-ingress-deploy-after.yaml)
 ```yaml
           lifecycle:
             preStop:
