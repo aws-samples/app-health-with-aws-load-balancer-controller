@@ -33,6 +33,11 @@ eksctl create cluster -f eks-arm64-cluster-spec.yaml
 ./create-ecr-repos.sh
 ```
 
+```bash
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
+export AWS_REGION=us-west-2
+```
+
 * build the web app docker image
 
 ```bash
@@ -50,14 +55,14 @@ cd load_simu_app
 * deploy app and load simulator
 
 ```bash
-kubectl apply -f django-svc-ingress-deploy-before.yaml
-kubectl apply -f appsimulator.yaml
+cat django-svc-ingress-deploy-before.yaml | envsubst | kubectl apply -f - 
+cat appsimulator.yaml | envsubst | kubectl apply -f -
 ```
 let it run for 30 min and then apply the changes that consider the app health without impacting the user
 
 
 ```bash
-kubectl apply -f django-svc-ingress-deploy-after.yaml
+cat django-svc-ingress-deploy-after.yaml | envsubst | kubectl apply -f -
 ```
 
 ## Evaluation

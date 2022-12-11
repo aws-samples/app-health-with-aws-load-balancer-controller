@@ -65,7 +65,7 @@ spec:
               port: 8000
             initialDelaySeconds: 3
             periodSeconds: 3
-          image: ${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/djangoapp:py39aarch64
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/djangoapp:py39aarch64
           imagePullPolicy: Always
           resources:
             requests:

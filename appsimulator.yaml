@@ -77,12 +77,12 @@ spec:
         - name: MAX_SLEEP_BETWEEN_CYCLE
           value: "12"
         - name: QUEUE_URL
-          value: "https://sqs.us-west-2.amazonaws.com/604429864555/vertscaler-state"
+          value: "https://sqs.${AWS_REGION}.amazonaws.com/${AWS_ACCOUNT_ID}/vertscaler-state"
         - name: APP_QUEUE_URL
-          value: "https://sqs.us-west-2.amazonaws.com/604429864555/db"
+          value: "https://sqs.${AWS_REGION}.amazonaws.com/${AWS_ACCOUNT_ID}/db"
         - name: DEPLOY_NAME
           value: "appsimulator"
-        image: 604429864555.dkr.ecr.us-west-2.amazonaws.com/loader:py39aarch64
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:py39aarch64
         imagePullPolicy: Always
         name: appsimulator
         command: ["/appsimulator.sh"]
