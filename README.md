@@ -63,7 +63,14 @@ cat appsimulator.yaml | envsubst | kubectl apply -f -
 kubectl  get svc| grep django-svc
 ```
 
-popultae the `APP_URL` in with `EXTERNAL-IP` value and deploy the application loader.
+popultae the `APP_URL` in with `EXTERNAL-IP` value and deploy the application loader. For example:
+
+```
+$kubectl  get svc 
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+django-svc   NodePort    10.100.116.33   django-app-1443363332.us-west-2.elb.amazonaws.com        80:31101/TCP   3h24m
+kubernetes   ClusterIP   10.100.0.1      <none>        443/TCP        6h27m
+```
 
 ```bash
 export APP_URL="django-app-1443363332.us-west-2.elb.amazonaws.com"
