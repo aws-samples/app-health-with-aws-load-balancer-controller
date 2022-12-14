@@ -14,28 +14,26 @@ We built a fictitious application to demonstrate the required steps to enable th
 ## Simulation setup
 This sample deploys a web application behind ALB and demonstrates seamless failover between pods during scale down event triggered by cluster autoscaler or karpenter. We first install EKS cluster, enable Amazon CNI to use IP-based ALB target, install aws-load-balancer controller add-on, then we use a simple Django app that accepts synthetic requests from a load simulator that changes the application replica-set size. Additionally, we deploy cluster autoscaler which changes the autoscale-group size to suit the needs of Django app pods. We monitor the application's health during scale-down events.
 
-* Deploy EKS cluster 
+* Deploy EKS cluster and [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml) or [karpenter](https://karpenter.sh/v0.20.0/getting-started/getting-started-with-eksctl/)
 
-```bash
-eksctl create cluster -f eks-arm64-cluster-spec.yaml
-```
-* Deploy [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml). Update the cluster name under `node-group-auto-discovery`
+** When using [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml), update the cluster name under `node-group-auto-discovery`
 
 * Deploy [aws-loadbalancer-controllers](https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html)
 
-* Setup [Container Insights on the cluster](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/deploy-container-insights-EKS.html)
+* Setup [Container Insights on the cluster](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-EKS-quickstart.html)
 
 * Deploy [database](https://github.com/aws-samples/amazon-aurora-call-to-amazon-sagemaker-sample/tree/master/multiplayer-matchmaker/aurora-pg-cdk)
 
-* Deploy ECR repo for the django and the load simulator
-
-```bash
-./create-ecr-repos.sh
-```
+* Deploy ECR repo and SQS queue for the django and the load simulator
 
 ```bash
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
 export AWS_REGION=us-west-2
+```
+
+```bash
+./create-ecr-sqs.sh
+cat ./create-iamserviceaccount-appsimulator.sh | envsubst | kubectl apply -f -
 ```
 
 * build the web app docker image
@@ -57,6 +55,19 @@ cd load_simu_app
 ```bash
 cat django-svc-ingress-deploy-before.yaml | envsubst | kubectl apply -f - 
 cat appsimulator.yaml | envsubst | kubectl apply -f -
+```
+
+* discover the application `EXTERNAL-IP` and configure the `app-loader` 
+
+```bash
+kubectl  get svc| grep django-svc
+```
+
+popultae the `APP_URL` in with `EXTERNAL-IP` value and deploy the application loader.
+
+```bash
+export APP_URL="django-app-1443363332.us-west-2.elb.amazonaws.com"
+cat app-loader.yaml | envsubst | kubectl apply -f -
 ```
 let it run for 30 min and then apply the changes that consider the app health without impacting the user
 
