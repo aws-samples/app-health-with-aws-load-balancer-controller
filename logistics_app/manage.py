@@ -8,7 +8,7 @@ import time
 
 def sighandler(signum,frame):
   print('Signal hanlder called with signal',signum)
-  os.system("sed -i 's/health/healtht/g' /usr/src/app/logistics/urls.py"
+  os.system("sed -i 's/health/healtht/g' /usr/src/app/logistics/urls.py")
   time.sleep(5)
   print('Signal hanlder - going to exit',signum)
 
