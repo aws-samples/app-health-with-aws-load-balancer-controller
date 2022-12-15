@@ -18,7 +18,7 @@ This sample deploys a web application behind ALB and demonstrates seamless failo
 ```bash
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
 export AWS_REGION=us-west-2
-export INSTANCE_FAMILY=m5
+export INSTANCE_FAMILY=t4g
 export INSTANCE_ARCH=arm
 ```
 
