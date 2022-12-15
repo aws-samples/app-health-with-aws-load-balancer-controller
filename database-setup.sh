@@ -54,7 +54,8 @@ ACK_SYSTEM_NAMESPACE=ack-system
 AWS_REGION=us-west-2
 APP_NAMESPACE=default
 
-EKS_VPC_ID=$(aws eks describe-cluster --name "${EKS_CLUSTER_NAME}" --query "cluster.resourcesVpcConfig.vpcId" --output text)
+# EKS_VPC_ID=$(aws eks describe-cluster --name "${EKS_CLUSTER_NAME}" --query "cluster.resourcesVpcConfig.vpcId" --output text)
+EKS_VPC_ID="0.0.0.0/0"
 
 RDS_SUBNET_GROUP_NAME="app-health-simu"
 RDS_SUBNET_GROUP_DESCRIPTION="database subnet group for app load simulation"
@@ -131,7 +132,7 @@ spec:
   dbSubnetGroupName: ${RDS_SUBNET_GROUP_NAME}
   engine: ${ENGINE_TYPE}
   engineVersion: "${ENGINE_VERSION}"
-  masterUsername: adminer
+  masterUsername: postgres
   masterUserPassword:
     namespace: ${APP_NAMESPACE}
     name: ack-creds
@@ -156,7 +157,7 @@ spec:
   dbSubnetGroupName: ${RDS_SUBNET_GROUP_NAME}
   engine: ${ENGINE_TYPE}
   engineVersion: "${ENGINE_VERSION}"
-  publiclyAccessible: false
+  publiclyAccessible: true
 EOF
 
 kubectl apply -f asv2-db-instance.yaml
