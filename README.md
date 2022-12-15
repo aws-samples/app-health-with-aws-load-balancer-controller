@@ -14,7 +14,26 @@ We built a fictitious application to demonstrate the required steps to enable th
 ## Simulation setup
 This sample deploys a web application behind ALB and demonstrates seamless failover between pods during scale down event triggered by cluster autoscaler or karpenter. We first install EKS cluster, enable Amazon CNI to use IP-based ALB target, install aws-load-balancer controller add-on, then we use a simple Django app that accepts synthetic requests from a load simulator that changes the application replica-set size. Additionally, we deploy cluster autoscaler which changes the autoscale-group size to suit the needs of Django app pods. We monitor the application's health during scale-down events.
 
+
+```bash
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
+export AWS_REGION=us-west-2
+export INSTANCE_FAMILY=m5
+export INSTANCE_ARCH=arm
+```
+
 * Deploy EKS cluster and [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml) or [karpenter](https://karpenter.sh/v0.20.0/getting-started/getting-started-with-eksctl/)
+
+```bash
+eksctl create cluster -f eks-cluster-spec.yaml
+```
+** Follow the [karpenter install steps](https://karpenter.sh/v0.20.0/getting-started/getting-started-with-eksctl/)
+
+Deploy [karpenter-provisioner.yaml](./karpenter-provisioner.yaml) 
+
+```bash
+cat ./karpenter-provisioner.yaml | envsubst | kubectl apply -f -
+```
 
 ** When using [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml), update the cluster name under `node-group-auto-discovery`
 
@@ -26,28 +45,24 @@ This sample deploys a web application behind ALB and demonstrates seamless failo
 
 * Deploy ECR repo and SQS queue for the django and the load simulator
 
-```bash
-export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
-export AWS_REGION=us-west-2
-```
 
 ```bash
 ./create-ecr-sqs.sh
-cat ./create-iamserviceaccount-appsimulator.sh | envsubst | kubectl apply -f -
+cat ./create-iamserviceaccount-appsimulator.sh | envsubst | bash
 ```
 
 * build the web app docker image
 
 ```bash
 cd logistics_app
-./build.sh
+cat ./build.sh | envsubst | bash 
 ```
 
 * build the load simulator image
 
 ```bash
 cd load_simu_app
-./build.sh
+cat ./build.sh | envsubst | bash
 ```
 
 * deploy app and load simulator

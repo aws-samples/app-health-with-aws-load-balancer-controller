@@ -82,8 +82,7 @@ spec:
           value: "https://sqs.${AWS_REGION}.amazonaws.com/${AWS_ACCOUNT_ID}/db"
         - name: DEPLOY_NAME
           value: "appsimulator"
-        #image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:py39aarch64
-        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:py39x86
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:py39${INSTANCE_ARCH}64
         imagePullPolicy: Always
         name: appsimulator
         command: ["/appsimulator.sh"]
