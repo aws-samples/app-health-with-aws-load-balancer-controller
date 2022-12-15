@@ -77,14 +77,14 @@ cat ./create-iamserviceaccount-appsimulator.sh | envsubst | bash
 
 ```bash
 cd logistics_app
-cat ./build.sh | envsubst | bash 
+./build.sh 
 ```
 
 * build the load simulator image
 
 ```bash
 cd load_simu_app
-cat ./build.sh | envsubst | bash
+./build.sh 
 ```
 
 * deploy app and load simulator
