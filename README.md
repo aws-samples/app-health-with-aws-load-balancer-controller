@@ -18,14 +18,36 @@ This sample deploys a web application behind ALB and demonstrates seamless failo
 ```bash
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
 export AWS_REGION=us-west-2
-export INSTANCE_FAMILY=m5
+export INSTANCE_FAMILY=t4g
 export INSTANCE_ARCH=arm
+export CLUSTER_NAME=rapid-scale-us-west-2
 ```
 
 * Deploy EKS cluster and [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml) or [karpenter](https://karpenter.sh/v0.20.0/getting-started/getting-started-with-eksctl/)
 
 ```bash
-eksctl create cluster -f eks-cluster-spec.yaml
+cat <<-EOF > eks-cluster-spec.yml
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: ${CLUSTER_NAME}
+  region: ${AWS_REGION}
+  version: "1.23"
+  tags:
+    karpenter.sh/discovery: ${CLUSTER_NAME}
+managedNodeGroups:
+  - instanceType: ${INSTANCE_FAMILY}.large
+    amiFamily: AmazonLinux2
+    name: ${CLUSTER_NAME}-ng
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 10
+iam:
+  withOIDC: true
+EOF
+
+eksctl create cluster -f eks-cluster-spec.yml
 ```
 ** Follow the [karpenter install steps](https://karpenter.sh/v0.20.0/getting-started/getting-started-with-eksctl/)
 
@@ -55,14 +77,14 @@ cat ./create-iamserviceaccount-appsimulator.sh | envsubst | bash
 
 ```bash
 cd logistics_app
-cat ./build.sh | envsubst | bash 
+./build.sh 
 ```
 
 * build the load simulator image
 
 ```bash
 cd load_simu_app
-cat ./build.sh | envsubst | bash
+./build.sh 
 ```
 
 * deploy app and load simulator
