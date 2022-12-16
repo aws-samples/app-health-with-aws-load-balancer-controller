@@ -21,7 +21,6 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-path: /logistics/health
     alb.ingress.kubernetes.io/success-codes: '200-301'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '3' 
     alb.ingress.kubernetes.io/backend-protocol: HTTP
     alb.ingress.kubernetes.io/load-balancer-name: django-app
 spec:
@@ -65,8 +64,7 @@ spec:
               port: 8000
             initialDelaySeconds: 3
             periodSeconds: 3
-              #image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/djangoapp:py39aarch64
-          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/djangoapp:py39x86
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/djangoapp:py39${INSTANCE_ARCH}64
           imagePullPolicy: Always
           resources:
             requests:

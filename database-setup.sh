@@ -1,4 +1,4 @@
-EKS_CLUSTER_NAME=lb-health-x86
+EKS_CLUSTER_NAME=rapid-scale-us-west-2
 AWS_REGION=us-west-2
 SERVICE="rds"
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)

@@ -68,7 +68,7 @@ spec:
         app: appsimulator
     spec:
       nodeSelector:
-        alpha.eksctl.io/nodegroup-name: lb-health-arm-ng-1
+        alpha.eksctl.io/nodegroup-name: rapid-scale-us-west-2-ng
       serviceAccountName: appsimulator
       containers:
       - env:
