@@ -14,6 +14,7 @@ We built a fictitious application to demonstrate the required steps to enable th
 ## Simulation setup
 This sample deploys a web application behind ALB and demonstrates seamless failover between pods during scale down event triggered by cluster autoscaler or karpenter. We first install EKS cluster, enable Amazon CNI to use IP-based ALB target, install aws-load-balancer controller add-on, then we use a simple Django app that accepts synthetic requests from a load simulator that changes the application replica-set size. Additionally, we deploy cluster autoscaler which changes the autoscale-group size to suit the needs of Django app pods. We monitor the application's health during scale-down events.
 
+* Populate enviroment variables. `INSTANCE_ARCH` can be either `amd` or `arm`. `INSTANCE_FAMILY` can be any of EC2 instance types. e.g., t4g with `INSTANCE_ARCH=arm` or m5 with `INSTANCE_ARCH=amd`
 
 ```bash
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
@@ -94,23 +95,28 @@ cat django-svc-ingress-deploy-before.yaml | envsubst | kubectl apply -f -
 cat appsimulator.yaml | envsubst | kubectl apply -f -
 ```
 
+* Deploy the application database schema using djanogo ORM. Connect to the app pod (django-app) and execute `manage.py migrate`
+
+```bash
+kubectl exec -it `kubectl get po | grep django-app| awk '{print $1}'` -- /usr/src/app/manage.py migrate
+```
+
 * discover the application `EXTERNAL-IP` and configure the `app-loader` 
 
 ```bash
 kubectl  get svc| grep django-svc
 ```
 
-popultae the `APP_URL` in with `EXTERNAL-IP` value and deploy the application loader. For example:
+popultae the `APP_URL` in with `ADDRESS` value and deploy the application loader. For example:
 
 ```
-$kubectl  get svc 
-NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
-django-svc   NodePort    10.100.116.33   django-app-1443363332.us-west-2.elb.amazonaws.com        80:31101/TCP   3h24m
-kubernetes   ClusterIP   10.100.0.1      <none>        443/TCP        6h27m
+$kubectl  get ingress
+NAME            CLASS    HOSTS   ADDRESS                                             PORTS   AGE
+django-ingres   <none>   *       django-app-1165248039.us-west-2.elb.amazonaws.com   80      40m
 ```
 
 ```bash
-export APP_URL="django-app-1443363332.us-west-2.elb.amazonaws.com"
+export APP_URL="django-app-1165248039.us-west-2.elb.amazonaws.com"
 cat app-loader.yaml | envsubst | kubectl apply -f -
 ```
 let it run for 30 min and then apply the changes that consider the app health without impacting the user
