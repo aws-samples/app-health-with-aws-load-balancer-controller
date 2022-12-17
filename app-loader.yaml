@@ -15,8 +15,8 @@ spec:
       labels:
         app: apploader
     spec:
-      nodeSelector:
-        alpha.eksctl.io/nodegroup-name: rapid-scale-us-west-2-ng
+#      nodeSelector:
+#        alpha.eksctl.io/nodegroup-name: rapid-scale-us-west-2-ng
       serviceAccountName: appsimulator
       containers:
       - env:
