@@ -82,6 +82,16 @@ spec:
           value: "https://sqs.${AWS_REGION}.amazonaws.com/${AWS_ACCOUNT_ID}/db"
         - name: DEPLOY_NAME
           value: "appsimulator"
+        - name: RADIAN_INTERVAL
+          value: "0.168"
+        - name: RADIAN_MAX
+          value: "3.14"
+        - name: MIN_AT_CYCLE_START
+          value: "1"
+        - name: SERVER_DEPLOY_PREFIX
+          value: "django-app"
+        - name: CLIENT_DEPLOY_PREFIX
+          value: "apploader"
         image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:py39${INSTANCE_ARCH}64
         imagePullPolicy: Always
         name: appsimulator

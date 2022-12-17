@@ -51,6 +51,8 @@ spec:
       labels:
         app: django-app
     spec:
+     nodeSelector:
+        karpenter.sh/provisioner-name: default
       containers:
         - name: app
           readinessProbe:
