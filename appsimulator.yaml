@@ -73,9 +73,9 @@ spec:
       containers:
       - env:
         - name: MIN_SLEEP_BETWEEN_CYCLE
-          value: "10"
+          value: "3"
         - name: MAX_SLEEP_BETWEEN_CYCLE
-          value: "12"
+          value: "3"
         - name: QUEUE_URL
           value: "https://sqs.${AWS_REGION}.amazonaws.com/${AWS_ACCOUNT_ID}/vertscaler-state"
         - name: APP_QUEUE_URL
