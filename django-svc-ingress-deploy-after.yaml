@@ -51,13 +51,10 @@ spec:
       labels:
         app: django-app
     spec:
+      nodeSelector:
+        karpenter.sh/provisioner-name: default
       containers:
         - name: app
-          lifecycle:
-            preStop:
-              exec:
-                # Allow existing requests complete within 120 seconds
-                command: ["/bin/sh", "-c", "sed -i 's/health/nothealthy/g' /usr/src/app/logistics/health.py && sleep 120"]
           readinessProbe:
             httpGet:
               path: /logistics/health
