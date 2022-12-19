@@ -114,12 +114,6 @@ cat django-svc-ingress-deploy-before.yaml | envsubst | kubectl apply -f -
 cat appsimulator.yaml | envsubst | kubectl apply -f -
 ```
 
-* Deploy the application database schema using djanogo ORM. Connect to the app pod (django-app) and execute `manage.py migrate`
-
-```bash
-kubectl exec -it `kubectl get po | grep django-app| awk '{print $1}'` -- /usr/src/app/manage.py migrate
-```
-
 * discover the application `EXTERNAL-IP` and configure the `app-loader` 
 
 ```bash
