@@ -51,10 +51,13 @@ spec:
       labels:
         app: django-app
     spec:
-     nodeSelector:
+      nodeSelector:
         karpenter.sh/provisioner-name: default
       containers:
         - name: app
+          envFrom:
+            - secretRef:
+                name: orders
           readinessProbe:
             httpGet:
               path: /logistics/todaysorders/
@@ -63,6 +66,7 @@ spec:
             periodSeconds: 3
           image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/djangoapp:py39${INSTANCE_ARCH}64
           imagePullPolicy: Always
+          command: ["/usr/src/app/start.sh"]
           resources:
             requests:
               cpu: 512m

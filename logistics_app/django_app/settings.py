@@ -79,11 +79,11 @@ WSGI_APPLICATION = 'django_app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'psqlextra.backend',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'cs0PMNP1dXwr-8rh4oEcpXe=215asD',
-        'HOST': 'smxfke9hxxtdxk.cluster-c9ns1yqrcpjz.us-west-2.rds.amazonaws.com',
-        'PORT': '5432',
+        'NAME': 'PGDATABASE',
+        'USER': 'PGUSER',
+        'PASSWORD': 'PGPASSWORD',
+        'HOST': 'PGHOST',
+        'PORT': 'PGPORT',
     }
 }
 

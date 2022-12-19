@@ -25,8 +25,8 @@ class Order(PostgresPartitionedModel):
   product = models.UUIDField(null=False)
   #merchant  = models.ForeignKey("Merchant", on_delete=models.CASCADE,null=True)
   #customer = models.ForeignKey("Customer", on_delete=models.CASCADE,null=True)
-  customer_id = models.BigIntegerField(null=False)
-  merchant_id = models.BigIntegerField(null=False)
+  customer_id = models.BigIntegerField(null=True)
+  merchant_id = models.BigIntegerField(null=True)
 
 
 class Delivery(PostgresPartitionedModel):

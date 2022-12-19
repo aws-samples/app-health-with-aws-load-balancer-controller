@@ -66,6 +66,18 @@ cat ./karpenter-provisioner.yaml | envsubst | kubectl apply -f -
 
 * Deploy [database](https://github.com/aws-samples/amazon-aurora-call-to-amazon-sagemaker-sample/tree/master/multiplayer-matchmaker/aurora-pg-cdk)
 
+* Create a secrets that stores the database credentials. Retrive the secrets value from Secrets Manager and populate `orders.secrets`. Avoid uploading the secrets to git by adding `*.secrets` to your `.gitignore`
+
+```bash
+cat orders.secrets 
+PGDATABASE=postgres
+PGUSER=postgres
+PGPASSWORD=mypssword
+PGHOST=myhost
+PGPORT=5432
+./create_orders_secrets.sh 
+```
+
 * Deploy ECR repo and SQS queue for the django and the load simulator
 
 
@@ -80,6 +92,13 @@ cat ./create-iamserviceaccount-appsimulator.sh | envsubst | bash
 cd logistics_app
 ./build.sh 
 ```
+
+* initilize the application database. Deploy a k8s cron job
+
+```bash
+cat django-initdb.yaml | envsubst | kubectl apply -f -
+```
+Observe the job logs before proceeding next steps
 
 * build the load simulator image
 
