@@ -1,4 +1,22 @@
-#!/bin/bash
+#!/bin/bash -x
+
+if [ -z "$AWS_REGION" ]
+then
+  echo "missing" AWS_REGION
+  exit
+fi
+if [ -z "$AWS_ACCOUNT_ID" ]
+then
+  echo "missing" AWS_ACCOUNT_ID
+  exit
+fi
+if [ -z "$INSTANCE_ARCH" ]
+then
+  echo "missing" INSTANCE_ARCH
+  exit
+fi
+
+echo AWS_REGION=$AWS_REGION AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID INSTANCE_ARCH=$INSTANCE_ARCH
 
 repo="loader"
 repo_name='.dkr.ecr.'${AWS_REGION}'.amazonaws.com/'$repo':py39'${INSTANCE_ARCH}'64'

@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 #restore simulator state from SQS in the case of previous run
 sqs_file="/tmp/"$RANDOM".json"
 aws sqs receive-message --queue-url ${QUEUE_URL} > $sqs_file
@@ -43,8 +43,8 @@ for i in $_seq; do
   echo "i=" $i
   aws sqs send-message --queue-url ${QUEUE_URL} --message-body "$i"
 
-  servers=`echo $(( (sinx / 5 / 5) + $MIN_AT_CYCLE_START ))`
-  clients=`echo $(( sinx / 2 + $MIN_AT_CYCLE_START ))`
+  servers=`echo $(( (sinx / 5) + $MIN_AT_CYCLE_START ))`
+  clients=`echo $(( sinx  + $MIN_AT_CYCLE_START ))`
 
   kubectl scale deploy/$CLIENT_DEPLOY_PREFIX --replicas=$clients
   aws cloudwatch put-metric-data --metric-name app_workers --namespace ${DEPLOY_NAME} --value ${clients}
