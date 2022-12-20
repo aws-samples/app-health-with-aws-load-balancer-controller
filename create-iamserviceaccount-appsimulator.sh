@@ -6,7 +6,7 @@ aws iam create-policy \
     --policy-document file://appsimulator_iam_policy.json
 
 eksctl create iamserviceaccount \
-  --cluster=lb-health-x86 \
+  --cluster=${CLUSTER_NAME} \
   --namespace=default \
   --name=appsimulator \
   --role-name "appsimulatorRole" \

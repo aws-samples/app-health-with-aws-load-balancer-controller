@@ -66,16 +66,27 @@ cat ./karpenter-provisioner.yaml | envsubst | kubectl apply -f -
 
 * Deploy [database](https://github.com/aws-samples/amazon-aurora-call-to-amazon-sagemaker-sample/tree/master/multiplayer-matchmaker/aurora-pg-cdk)
 
-* Create a secrets that stores the database credentials. Retrive the secrets value from Secrets Manager and populate `orders.secrets`. Avoid uploading the secrets to git by adding `*.secrets` to your `.gitignore`
+* Deploy the databse secrets. The CDK script that deployed the db also creates secrets in AWS Secrets Manager. We will deploy these secrets from Secrets Manager into the application pods. 
+
+Install the secrets store CSI driver and AWS Secrets and Configuration Provider (ASCP):
 
 ```bash
-cat orders.secrets 
-PGDATABASE=postgres
-PGUSER=postgres
-PGPASSWORD=mypssword
-PGHOST=myhost
-PGPORT=5432
-./create_orders_secrets.sh 
+helm repo add secrets-store-csi-driver \
+  https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+
+helm install -n kube-system csi-secrets-store \
+  --set syncSecret.enabled=true \
+  --set enableSecretRotation=true \
+  secrets-store-csi-driver/secrets-store-csi-driver
+
+kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml
+```
+
+Create SecretProviderClass custom resource with `provider:aws`
+
+```bash
+export SECRET=`aws secretsmanager list-secrets --query SecretList[].Name --output text` 
+cat db-secret-provider-class.yaml | envsubst | kubectl -f -
 ```
 
 * Deploy ECR repo and SQS queue for the django and the load simulator
