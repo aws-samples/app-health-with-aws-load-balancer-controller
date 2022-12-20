@@ -12,8 +12,6 @@ sed -i "s/PGPASSWORD/$PGPASSWORD/g" django_app/settings.py
 sed -i "s/PGHOST/$PGHOST/g" django_app/settings.py
 sed -i "s/PGPORT/$PGPORT/g" django_app/settings.py
 
-cat django_app/settings.py
-
 ./manage.py pgmakemigrations
 ./manage.py migrate
 

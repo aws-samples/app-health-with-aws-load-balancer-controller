@@ -53,11 +53,18 @@ spec:
     spec:
       nodeSelector:
         karpenter.sh/provisioner-name: default
+      serviceAccountName: appsimulator
       containers:
         - name: app
-          envFrom:
-            - secretRef:
-                name: orders
+        volumeMounts:
+        - name: secrets-store-orders
+          mountPath: "/mnt/secrets"
+        env:
+        - name: SECRET_FILE
+          value: "/mnt/secrets/${SECRET}"
+          #envFrom:
+          #  - secretRef:
+          #      name: orders
           readinessProbe:
             httpGet:
               path: /logistics/health
@@ -73,3 +80,10 @@ spec:
               memory: 512Mi
           ports:
             - containerPort: 8000
+      volumes:
+      - name: secrets-store-orders
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: rapidscale
