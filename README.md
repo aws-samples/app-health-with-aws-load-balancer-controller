@@ -134,13 +134,10 @@ kubectl  get svc| grep django-svc
 popultae the `APP_URL` in with `ADDRESS` value and deploy the application loader. For example:
 
 ```
-$kubectl  get ingress
-NAME            CLASS    HOSTS   ADDRESS                                             PORTS   AGE
-django-ingres   <none>   *       django-app-1165248039.us-west-2.elb.amazonaws.com   80      40m
+export APP_URL=`kubectl get ingress| awk '{print $4}'| grep -v ADDRESS`
 ```
 
 ```bash
-export APP_URL="django-app-1165248039.us-west-2.elb.amazonaws.com"
 cat app-loader.yaml | envsubst | kubectl apply -f -
 ```
 let it run for 30 min and then apply the changes that consider the app health without impacting the user
