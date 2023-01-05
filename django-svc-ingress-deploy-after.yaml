@@ -56,6 +56,10 @@ spec:
       serviceAccountName: appsimulator
       containers:
         - name: app
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sed -i 's/health/nothealthy/g' /usr/src/app/logistics/health.py && sleep 120"]
         volumeMounts:
         - name: secrets-store-orders
           mountPath: "/mnt/secrets"
