@@ -14,7 +14,7 @@ We built a fictitious application to demonstrate the required steps to enable th
 ## Simulation setup
 This sample deploys a web application behind ALB and demonstrates seamless failover between pods during scale down event triggered by cluster autoscaler or karpenter. We first install EKS cluster, enable Amazon CNI to use IP-based ALB target, install aws-load-balancer controller add-on, then we use a simple Django app that accepts synthetic requests from a load simulator that changes the application replica-set size. Additionally, we deploy cluster autoscaler which changes the autoscale-group size to suit the needs of Django app pods. We monitor the application's health during scale-down events.
 
-* Populate enviroment variables. `INSTANCE_ARCH` can be either `amd` or `arm`. `INSTANCE_FAMILY` can be any of EC2 instance types. e.g., t4g with `INSTANCE_ARCH=arm` or m5 with `INSTANCE_ARCH=amd`
+* Populate enviroment variables. `INSTANCE_FAMILY` can be any of EC2 instance types. e.g., t4g with `INSTANCE_ARCH=arm` or m5 with `INSTANCE_ARCH=amd`
 
 ```bash
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
