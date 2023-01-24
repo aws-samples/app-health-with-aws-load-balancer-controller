@@ -11,7 +11,8 @@ spec:
   - key: kubernetes.io/arch
     operator: In
     values:
-    - ${INSTANCE_ARCH}64
+    - arm64
+    - amd64
   limits:
     resources:
       cpu: 1000

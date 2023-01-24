@@ -20,8 +20,16 @@ This sample deploys a web application behind ALB and demonstrates seamless failo
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
 export AWS_REGION=us-west-2
 export INSTANCE_FAMILY=t4g
-export INSTANCE_ARCH=arm
 export CLUSTER_NAME=rapid-scale-us-west-2
+export LOAD_IMAGE_NAME=loader
+export APP_IMAGE_NAME=djangoapp
+export LOAD_IMAGE_TAG=multiarch-py3
+export APP_IMAGE_TAG=multiarch-py3
+```
+
+* Enable multi-arch builds (linux/arm64 and linux/amd64)
+```bash
+docker buildx create --name builder
 ```
 
 * Deploy EKS cluster and [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml) or [karpenter](https://karpenter.sh/v0.20.0/getting-started/getting-started-with-eksctl/)

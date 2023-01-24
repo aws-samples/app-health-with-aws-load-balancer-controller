@@ -1,9 +1,6 @@
 #!/bin/bash
-  
-repo="djangoapp"
-repo_name='.dkr.ecr.'${AWS_REGION}'.amazonaws.com/'$repo':py39'${INSTANCE_ARCH}'64'
-repo_url=${AWS_ACCOUNT_ID}$repo_name
 
-aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin $repo_url
-docker build -t $repo_url .
-docker push $repo_url
+IMAGE_REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_IMAGE_NAME:$IMAGE_TAG
+aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin $IMAGE_REPO
+docker buildx use builder
+docker buildx build --push --platform linux/arm64,linux/amd64 -t $IMAGE_REPO .
