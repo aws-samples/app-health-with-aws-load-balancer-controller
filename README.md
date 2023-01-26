@@ -14,42 +14,117 @@ We built a fictitious application to demonstrate the required steps to enable th
 ## Simulation setup
 This sample deploys a web application behind ALB and demonstrates seamless failover between pods during scale down event triggered by cluster autoscaler or karpenter. We first install EKS cluster, enable Amazon CNI to use IP-based ALB target, install aws-load-balancer controller add-on, then we use a simple Django app that accepts synthetic requests from a load simulator that changes the application replica-set size. Additionally, we deploy cluster autoscaler which changes the autoscale-group size to suit the needs of Django app pods. We monitor the application's health during scale-down events.
 
-* Deploy EKS cluster 
-
-```bash
-eksctl create cluster -f eks-arm64-cluster-spec.yaml
-```
-* Deploy [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml). Update the cluster name under `node-group-auto-discovery`
-
-* Deploy [aws-loadbalancer-controllers](https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html)
-
-* Setup [Container Insights on the cluster](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/deploy-container-insights-EKS.html)
-
-* Deploy [database](https://github.com/aws-samples/amazon-aurora-call-to-amazon-sagemaker-sample/tree/master/multiplayer-matchmaker/aurora-pg-cdk)
-
-* Deploy ECR repo for the django and the load simulator
-
-```bash
-./create-ecr-repos.sh
-```
+* Populate enviroment variables. `INSTANCE_FAMILY` can be any of EC2 instance types. e.g., t4g with `INSTANCE_ARCH=arm` or m5 with `INSTANCE_ARCH=amd`
 
 ```bash
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
 export AWS_REGION=us-west-2
+export INSTANCE_FAMILY=t4g
+export CLUSTER_NAME=rapid-scale-us-west-2
+export LOAD_IMAGE_NAME=loader
+export APP_IMAGE_NAME=djangoapp
+export LOAD_IMAGE_TAG=multiarch-py3
+export APP_IMAGE_TAG=multiarch-py3
+```
+
+* Enable multi-arch builds (linux/arm64 and linux/amd64)
+```bash
+docker buildx create --name builder
+```
+
+* Deploy EKS cluster and [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml) or [karpenter](https://karpenter.sh/v0.20.0/getting-started/getting-started-with-eksctl/)
+
+```bash
+cat <<-EOF > eks-cluster-spec.yml
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: ${CLUSTER_NAME}
+  region: ${AWS_REGION}
+  version: "1.23"
+  tags:
+    karpenter.sh/discovery: ${CLUSTER_NAME}
+managedNodeGroups:
+  - instanceType: ${INSTANCE_FAMILY}.large
+    amiFamily: AmazonLinux2
+    name: ${CLUSTER_NAME}-ng
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 10
+iam:
+  withOIDC: true
+EOF
+
+eksctl create cluster -f eks-cluster-spec.yml
+```
+** Follow the [karpenter install steps](https://karpenter.sh/v0.20.0/getting-started/getting-started-with-eksctl/)
+
+Deploy [karpenter-provisioner.yaml](./karpenter-provisioner.yaml) 
+
+```bash
+cat ./karpenter-provisioner.yaml | envsubst | kubectl apply -f -
+```
+
+** When using [cluster autoscaler](./cluster-autoscaler-autodiscover.yaml), update the cluster name under `node-group-auto-discovery`
+
+* Deploy [aws-loadbalancer-controllers](https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html)
+
+* Setup [Container Insights on the cluster](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-EKS-quickstart.html)
+
+* Deploy [database](https://github.com/aws-samples/amazon-aurora-call-to-amazon-sagemaker-sample/tree/master/multiplayer-matchmaker/aurora-pg-cdk)
+
+* Deploy the databse secrets. The CDK script that deployed the db also creates secrets in AWS Secrets Manager. We will deploy these secrets from Secrets Manager into the application pods. 
+
+Install the secrets store CSI driver and AWS Secrets and Configuration Provider (ASCP):
+
+```bash
+helm repo add secrets-store-csi-driver \
+  https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+
+helm install -n kube-system csi-secrets-store \
+  --set syncSecret.enabled=true \
+  --set enableSecretRotation=true \
+  secrets-store-csi-driver/secrets-store-csi-driver
+
+kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml
+```
+
+Create SecretProviderClass custom resource with `provider:aws`
+
+```bash
+export SECRET=`aws secretsmanager list-secrets --query SecretList[].Name --output text` 
+export SECRET_FILE="/mnt/secrets/$SECRET"
+cat db-secret-provider-class.yaml | envsubst | kubectl apply -f -
+```
+
+* Deploy ECR repo and SQS queue for the django and the load simulator
+
+
+```bash
+./create-ecr-sqs.sh
+cat ./create-iamserviceaccount-appsimulator.sh | envsubst | bash
 ```
 
 * build the web app docker image
 
 ```bash
 cd logistics_app
-./build.sh
+./build.sh 
 ```
+
+* initilize the application database. Deploy a k8s cron job
+
+```bash
+cat django-initdb.yaml | envsubst | kubectl apply -f -
+```
+Observe the job logs before proceeding next steps
 
 * build the load simulator image
 
 ```bash
 cd load_simu_app
-./build.sh
+./build.sh 
 ```
 
 * deploy app and load simulator
@@ -57,6 +132,22 @@ cd load_simu_app
 ```bash
 cat django-svc-ingress-deploy-before.yaml | envsubst | kubectl apply -f - 
 cat appsimulator.yaml | envsubst | kubectl apply -f -
+```
+
+* discover the application `EXTERNAL-IP` and configure the `app-loader` 
+
+```bash
+kubectl  get svc| grep django-svc
+```
+
+popultae the `APP_URL` in with `ADDRESS` value and deploy the application loader. For example:
+
+```
+export APP_URL=`kubectl get ingress| awk '{print $4}'| grep -v ADDRESS`
+```
+
+```bash
+cat app-loader.yaml | envsubst | kubectl apply -f -
 ```
 let it run for 30 min and then apply the changes that consider the app health without impacting the user
 
@@ -123,6 +214,21 @@ From [application Kubernetes spec](./django-svc-ingress-deploy-after.yaml)
 ![](./502.after.png)
 
 We can see that the number of 504 errors dropped from average of 340 during scale down event to 0 and 502 errors from 200 during scale down event to 30. Note that the 502 errors did not effect the users as it was sent by the pod to kubelet and ALB control plane before decommissioning the container.  
+
+## Cleanup
+
+* Delete the EKS cluster
+```bash
+eksctl delete cluster -f eks-arm64-cluster-spec.yaml
+```
+
+* Delete [database](https://github.com/aws-samples/amazon-aurora-call-to-amazon-sagemaker-sample/tree/master/multiplayer-matchmaker/aurora-pg-cdk)
+
+* Delete ECR repo for the django and the load simulator
+
+```bash
+./delete-ecr-repos.sh
+```
 
 ## Conclusion
 Scalable applications require seamless expansion and contraction of their capacity without affecting their users. Therefore, it is necessary to allow the hosting platform to terminate application instances gracefully. The EKS and AWS Load Balancer controller make it easy by assessing the app's readiness to serve users with Pod readiness gates. To facilitate graceful termination, application developers must handle the SIGTERM signal and implement application health checks that do not serve users.

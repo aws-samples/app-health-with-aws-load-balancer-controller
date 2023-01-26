@@ -1,12 +1,6 @@
 #!/bin/bash
-  
-account=$(aws sts get-caller-identity --output text --query Account)
-region="us-west-2"
-repo="djangoapp"
-repo_name='.dkr.ecr.'$region'.amazonaws.com/'$repo':py39aarch64'
-repo_url=$account$repo_name
 
-aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $repo_url
-docker build -t $repo .
-docker tag $repo:latest $repo_url
-docker push $repo_url
+IMAGE_REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_IMAGE_NAME:$IMAGE_TAG
+aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin $IMAGE_REPO
+docker buildx use builder
+docker buildx build --push --platform linux/arm64,linux/amd64 -t $IMAGE_REPO .

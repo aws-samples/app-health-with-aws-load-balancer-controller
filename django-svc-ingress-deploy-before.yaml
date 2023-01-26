@@ -21,7 +21,6 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-path: /logistics/todaysorders
     alb.ingress.kubernetes.io/success-codes: '200-301'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '3' 
     alb.ingress.kubernetes.io/backend-protocol: HTTP
     alb.ingress.kubernetes.io/load-balancer-name: django-app
 spec:
@@ -52,19 +51,40 @@ spec:
       labels:
         app: django-app
     spec:
+      nodeSelector:
+        karpenter.sh/provisioner-name: default
+      serviceAccountName: appsimulator
       containers:
-        - name: app
-          readinessProbe:
-            httpGet:
-              path: /logistics/todaysorders/
-              port: 8000
-            initialDelaySeconds: 3
-            periodSeconds: 3
-          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/djangoapp:py39aarch64
-          imagePullPolicy: Always
-          resources:
-            requests:
-              cpu: 512m
-              memory: 512Mi
-          ports:
-            - containerPort: 8000
+      - name: app
+        volumeMounts:
+        - name: secrets-store-orders
+          mountPath: "/mnt/secrets"
+        env:
+        - name: SECRET_FILE
+          value: "/mnt/secrets/${SECRET}"
+        #- name: app
+        #  envFrom:
+        #    - secretRef:
+        #        name: orders
+        readinessProbe:
+          httpGet:
+            path: /logistics/todaysorders/
+            port: 8000
+          initialDelaySeconds: 3
+          periodSeconds: 3
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/djangoapp:py39${INSTANCE_ARCH}64
+        imagePullPolicy: Always
+        command: ["/usr/src/app/start.sh"]
+        resources:
+          requests:
+            cpu: 512m
+            memory: 512Mi
+        ports:
+          - containerPort: 8000
+      volumes:
+      - name: secrets-store-orders
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: rapidscale

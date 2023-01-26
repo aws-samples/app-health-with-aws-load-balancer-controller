@@ -1,5 +1,8 @@
 FROM python:3.9
 
+ARG ARCH
+ENV ARCH=$ARCH
+
 RUN apt -y --fix-missing update
 RUN apt install -y curl vim unzip jq telnet dnsutils
 
@@ -20,10 +23,7 @@ RUN apt-get install -y kubectl
 RUN kubectl version --client
 
 #Install aws cli
-#RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
-RUN unzip awscliv2.zip
-RUN ./aws/install
+RUN pip install awscli
 RUN mkdir /root/.aws
 COPY config /root/.aws
 

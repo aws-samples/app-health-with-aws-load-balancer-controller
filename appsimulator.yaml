@@ -68,21 +68,31 @@ spec:
         app: appsimulator
     spec:
       nodeSelector:
-        alpha.eksctl.io/nodegroup-name: lb-health-arm-ng-1
+        alpha.eksctl.io/nodegroup-name: rapid-scale-us-west-2-ng
       serviceAccountName: appsimulator
       containers:
       - env:
         - name: MIN_SLEEP_BETWEEN_CYCLE
-          value: "10"
+          value: "3"
         - name: MAX_SLEEP_BETWEEN_CYCLE
-          value: "12"
+          value: "3"
         - name: QUEUE_URL
           value: "https://sqs.${AWS_REGION}.amazonaws.com/${AWS_ACCOUNT_ID}/vertscaler-state"
         - name: APP_QUEUE_URL
           value: "https://sqs.${AWS_REGION}.amazonaws.com/${AWS_ACCOUNT_ID}/db"
         - name: DEPLOY_NAME
           value: "appsimulator"
-        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:py39aarch64
+        - name: RADIAN_INTERVAL
+          value: "0.168"
+        - name: RADIAN_MAX
+          value: "3.14"
+        - name: MIN_AT_CYCLE_START
+          value: "1"
+        - name: SERVER_DEPLOY_PREFIX
+          value: "django-app"
+        - name: CLIENT_DEPLOY_PREFIX
+          value: "apploader"
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:py39${INSTANCE_ARCH}64
         imagePullPolicy: Always
         name: appsimulator
         command: ["/appsimulator.sh"]
