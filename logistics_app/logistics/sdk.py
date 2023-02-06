@@ -5,6 +5,7 @@ sdk_title='Logistics Django'
 api_calls=['/logistics/new_order - create a new order - return order details',
 	'/logistics/<order uuid> - get order details - retrun order details',
         '/logistics/update_order/<order uuid> - update order - return order details',
+        '/logistics/update_delivery - update delivery - return delivery id',
         '/logistics/todaysorders - return todays orders',
         '/logistics/allorders - return todays orders',]
         

@@ -1,8 +1,5 @@
 FROM python:3.9
 
-ARG ARCH
-ENV ARCH=$ARCH
-
 RUN apt -y --fix-missing update
 RUN apt install -y curl vim unzip jq telnet dnsutils
 

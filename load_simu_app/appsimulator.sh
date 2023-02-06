@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #restore simulator state from SQS in the case of previous run
 sqs_file="/tmp/"$RANDOM".json"
 aws sqs receive-message --queue-url ${QUEUE_URL} > $sqs_file
@@ -14,6 +14,8 @@ else
   then
     echo "EMPTY-SQS"
     j=0
+  else
+    aws sqs delete-message --queue-url ${QUEUE_URL} --receipt-handle $receipt_handle
   fi
 fi
 rm -f $sqs_file
@@ -43,12 +45,15 @@ for i in $_seq; do
   echo "i=" $i
   aws sqs send-message --queue-url ${QUEUE_URL} --message-body "$i"
 
-  servers=`echo $(( (sinx / 5) + $MIN_AT_CYCLE_START ))`
-  clients=`echo $(( sinx  + $MIN_AT_CYCLE_START ))`
+  servers=`echo $(( (sinx * $SERVER_SCALE_RATIO) + $MIN_AT_CYCLE_START ))`
+  clients=`echo $(( (sinx * $CLIENT_SCALE_RATIO) + $MIN_AT_CYCLE_START ))`
 
   kubectl scale deploy/$CLIENT_DEPLOY_PREFIX --replicas=$clients
   aws cloudwatch put-metric-data --metric-name app_workers --namespace ${DEPLOY_NAME} --value ${clients}
   echo "app_workers(clients)="$clients" sinx="$sinx
+  kubectl scale deploy/$RULE_ENGINE_DEPLOY_PREFIX --replicas=$servers
+  aws cloudwatch put-metric-data --metric-name ruleengine_workers --namespace ${DEPLOY_NAME} --value ${servers}
+  echo "ruleengine_workers="$servers" sinx="$sinx
   kubectl scale deploy/$SERVER_DEPLOY_PREFIX --replicas=$servers
   aws cloudwatch put-metric-data --metric-name load_workers --namespace ${DEPLOY_NAME} --value ${servers}
   echo "load_workers(servers)="$servers" sinx="$sinx
@@ -61,6 +66,7 @@ for i in $_seq; do
   sleep $sleeptime"m"
 done
 #longer cycle _seq=`seq 0.01 0.021 3.14`
+j=0
 _seq=`seq $j $RADIAN_INTERVAL $RADIAN_MAX`
 #_seq=`seq 0.01 0.168 3.14`
 echo "new cycle "$_seq

@@ -84,6 +84,22 @@ DATABASES = {
         'PASSWORD': 'PGPASSWORD',
         'HOST': 'PGHOST',
         'PORT': 'PGPORT',
+    },
+    'writer': {
+        'ENGINE': 'psqlextra.backend',
+        'NAME': 'PGDATABASE',
+        'USER': 'PGUSER',
+        'PASSWORD': 'PGPASSWORD',
+        'HOST': 'logis1.endpoint.proxy-c9ns1yqrcpjz.us-west-2.rds.amazonaws.com',
+        'PORT': 'PGPORT',
+    },
+    'reader': {
+        'ENGINE': 'psqlextra.backend',
+        'NAME': 'PGDATABASE',
+        'USER': 'PGUSER',
+        'PASSWORD': 'PGPASSWORD',
+        'HOST': 'logis2.endpoint.proxy-c9ns1yqrcpjz.us-west-2.rds.amazonaws.com',
+        'PORT': 'PGPORT',
     }
 }
 

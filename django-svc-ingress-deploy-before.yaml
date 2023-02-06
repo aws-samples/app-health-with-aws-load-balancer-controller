@@ -60,6 +60,8 @@ spec:
         - name: secrets-store-orders
           mountPath: "/mnt/secrets"
         env:
+        - name: ORDER_QUEUE
+          value: "https://sqs.${AWS_REGION}.amazonaws.com/${AWS_ACCOUNT_ID}/orders"
         - name: SECRET_FILE
           value: "/mnt/secrets/${SECRET}"
         #- name: app

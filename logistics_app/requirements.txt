@@ -3,3 +3,4 @@ psycopg2
 pytz
 django-postgres-extra
 django-sslserver
+boto3
