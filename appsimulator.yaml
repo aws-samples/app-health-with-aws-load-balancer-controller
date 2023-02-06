@@ -68,7 +68,7 @@ spec:
         app: appsimulator
     spec:
       nodeSelector:
-        alpha.eksctl.io/nodegroup-name: rapid-scale-us-west-2-ng
+        alpha.eksctl.io/nodegroup-name: ${CLUSTER_NAME}-ng
       serviceAccountName: appsimulator
       containers:
       - env:
@@ -92,7 +92,7 @@ spec:
           value: "django-app"
         - name: CLIENT_DEPLOY_PREFIX
           value: "apploader"
-        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:py39${INSTANCE_ARCH}64
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:${LOAD_IMAGE_TAG}
         imagePullPolicy: Always
         name: appsimulator
         command: ["/appsimulator.sh"]

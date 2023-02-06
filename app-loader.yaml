@@ -15,7 +15,7 @@ spec:
       labels:
         app: apploader
     spec:
-     nodeSelector:
+      nodeSelector:
         karpenter.sh/provisioner-name: default
       serviceAccountName: appsimulator
       containers:
@@ -26,7 +26,7 @@ spec:
           value: "http://${APP_URL}/logistics"
         - name: DEPLOY_NAME
           value: "appsimulator"
-        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:py39${INSTANCE_ARCH}64
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/loader:${LOAD_IMAGE_TAG}
         name: apploader
         command: ["/app-loader.sh"]
         resources:

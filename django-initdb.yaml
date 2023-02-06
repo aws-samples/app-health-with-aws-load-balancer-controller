@@ -16,7 +16,7 @@ spec:
         env:
         - name: SECRET_FILE
           value: "/mnt/secrets/${SECRET}"
-        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/djangoapp:py39${INSTANCE_ARCH}64
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/djangoapp:$APP_IMAGE_TAG
         imagePullPolicy: Always
         command: ["/usr/src/app/initdb.sh"]
       volumes:
