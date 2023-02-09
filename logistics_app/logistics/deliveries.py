@@ -20,9 +20,8 @@ deliveries_queue=os.environ['DELIVERY_QUEUE']
 
 def update(request):
   for i in range(2):
-    print("in deliveries:update: new update thread: {}".format(i))
-    sys.stdout.flush()
-
+    #print("in deliveries:update: new update thread: {}".format(i))
+    #sys.stdout.flush()
     delivery_obj=update_single
   context = {
       "delivery": delivery_obj,

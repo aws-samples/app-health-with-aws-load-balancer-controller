@@ -4,3 +4,4 @@ pytz
 django-postgres-extra
 django-sslserver
 boto3
+pandas

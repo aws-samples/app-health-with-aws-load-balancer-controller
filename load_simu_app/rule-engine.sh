@@ -5,4 +5,4 @@ do
   /order-update-from-sqs.sh &
   sleep $SLEEP_BETWEEN_CYCLE
 done
-/order-update-from-sqs.sh
+/insert-order.sh 
