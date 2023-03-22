@@ -28,7 +28,7 @@ def authuser(request):
 
 def insert(request):
   #for i in range(2):
-  i=do_cpu_work(request)
+  #i=do_cpu_work(request)
   order_obj=insert_single
   context = {
       "order": order_obj,
@@ -108,7 +108,7 @@ def update_from_sqs(request):
   for i in range(2):
 #    print("in orders:update_from_sqs: new update thread: {}".format(i))
 #    sys.stdout.flush()
-    i=do_cpu_work(request)
+    #i=do_cpu_work(request)
     order_obj=update_from_sqs_single 
   context = {
       "order": order_obj,

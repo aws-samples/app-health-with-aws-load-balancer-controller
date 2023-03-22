@@ -19,7 +19,7 @@ def order_detail(request, uuid):
   return render(request, "order_detail.html", context)
 
 def todaysorders_detail(request):
-  order_objs= Order.objects.filter(updated_at__lte=timezone.now() - datetime.timedelta(seconds=10))[:20000]
+  order_objs= Order.objects.filter(updated_at__lte=timezone.now() - datetime.timedelta(seconds=10)).using('reader')[:20000]
   #order_objs=Order.objects.raw("select id,uuid,origin from logistics_order where created_at > NOW()-'10 sec'::INTERVAL").using('reader')
   
   recent_orders_uuid=order_objs.values('uuid')
@@ -46,7 +46,7 @@ def todaysorders_detail(request):
   product_nd=np.stack(product_chunks)
   product_df=pd.DataFrame(product_nd)
   
-  for i in range(3): 
+  for i in range(1): 
     product_uuid_df=product_df.dot(uuid_df)
     uuid_product_df=uuid_df.dot(product_df)
 

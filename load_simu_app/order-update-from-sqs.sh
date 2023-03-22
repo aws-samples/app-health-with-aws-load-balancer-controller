@@ -30,10 +30,15 @@ do
     echo "EMPTY-SQS"
     continue
   else
+    max_id=`echo $(($id+10))`
     psql -A -e -t -w -c "
 begin;
-/*update from sqs*/update logistics_order set updated_at=NOW() where id = "$id";
+/*update from sqs*/update logistics_order set updated_at=NOW() where id >= "$id" and id < $max_id;
 commit;"
+    logistics_delivery_ids=`psql -A -q -t -w -c "
+insert into logistics_delivery(order_id,product,product_desc,customer_desc,origin,manufacturer,required_by,bill_address,bill_to,payment,order_user,unit,purchase_order,order_group,dest,uuid,created_at,updated_at,method) select $id,uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),NOW(),NOW(),md5(RANDOM()::TEXT) from generate_series(1,10) returning id;
+    "`
+    echo "logistics_delivery_ids:"$logistics_delivery_ids
     delivery_id=`psql -A -q -t -w -c "
 insert into logistics_delivery(order_id,product,product_desc,customer_desc,origin,manufacturer,required_by,bill_address,bill_to,payment,order_user,unit,purchase_order,order_group,dest,uuid,created_at,updated_at,method) select $id,uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),uuid_generate_v4(),NOW(),NOW(),md5(RANDOM()::TEXT) from generate_series(1,1) returning id;
     "`

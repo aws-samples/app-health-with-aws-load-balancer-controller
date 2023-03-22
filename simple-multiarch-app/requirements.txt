@@ -1,0 +1,4 @@
+django
+django-sslserver
+boto3
+pandas

@@ -51,7 +51,7 @@ for i in $_seq; do
   kubectl scale deploy/$CLIENT_DEPLOY_PREFIX --replicas=$clients
   aws cloudwatch put-metric-data --metric-name app_workers --namespace ${DEPLOY_NAME} --value ${clients}
   echo "app_workers(clients)="$clients" sinx="$sinx
-  kubectl scale deploy/$RULE_ENGINE_DEPLOY_PREFIX --replicas=$servers
+  kubectl scale deploy/$RULE_ENGINE_DEPLOY_PREFIX --replicas=$clients
   aws cloudwatch put-metric-data --metric-name ruleengine_workers --namespace ${DEPLOY_NAME} --value ${servers}
   echo "ruleengine_workers="$servers" sinx="$sinx
   kubectl scale deploy/$SERVER_DEPLOY_PREFIX --replicas=$servers
