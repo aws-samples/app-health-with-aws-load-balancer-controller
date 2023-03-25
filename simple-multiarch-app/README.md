@@ -9,7 +9,7 @@ export AWS_REGION=us-west-2
 export BUILDX_VER=v0.10.3
 export APP_IMAGE_NAME=simplemultiarchimage
 export APP_IMAGE_TAG=multiarch-py3
-export CLUSTER_NAME=web-usw2
+export CLUSTER_NAME=grv-usw2
 export KARPENTER_VERSION=v0.27.0
 export AWS_DEFAULT_REGION=us-west-2
 export TEMPOUT=$(mktemp)
@@ -23,7 +23,7 @@ docker buildx create --name craftbuilder
 * Create and deploy the ECR docker registry and images for the app
 
 ```bash
-./create-ecr.sh
+./create-ecr-sqs.sh
 ./buildx.sh
 ```
 
@@ -88,4 +88,15 @@ Copy the ADDRESS value and browse to http://$ADDRESS/tlvsummit23/runtime/ and no
 
 TODO: ADD PERF ANALYSIS WITH CW CONTAINER INSIGHTS
 
+```
+kubectl autoscale deploy armsimplemultiarchapp --cpu-percent=90 --min=1 --max=100
+kubectl autoscale deploy amdsimplemultiarchapp --cpu-percent=80 --min=1 --max=100
+kubectl autoscale deploy amdsimplemultiarchproc --cpu-percent=80 --min=1 --max=100
+kubectl autoscale deploy armsimplemultiarchproc --cpu-percent=90 --min=1 --max=100
+```
 
+
+### Processing nerrative
+In this example, we generate two matrices of configurable sizes. We then define the number of processes to use (num_cores) and create a Pool of processes. Next, we create a list of row-column pairs to calculate by iterating over each row of the first matrix and each column of the second matrix. We then use the map method of the pool to apply the matrix_multiply function to each row-column pair in the list, resulting in a list of calculated values. Finally, we reshape the resulting list into a matrix of the appropriate size.
+
+Note that using multiprocessing for matrix multiplication may not always result in a speedup, as the overhead of creating and managing the processes can sometimes outweigh the benefits of parallelism. It is always a good idea to benchmark different implementations and compare their performance.

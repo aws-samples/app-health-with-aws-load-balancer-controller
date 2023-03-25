@@ -2,6 +2,11 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import signal
+
+def sighandler(signum,frame):
+  print('Signal hanlder called with signal',signum)
+  sys.stdout.flush()
 
 
 def main():
@@ -19,4 +24,5 @@ def main():
 
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, sighandler)
     main()
