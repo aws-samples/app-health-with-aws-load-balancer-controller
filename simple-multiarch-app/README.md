@@ -1,6 +1,6 @@
 # Simple Web Application to demonstrate deployment of multi-arch images of ARM64 and AMD64
 
-## Deploy steps
+## Methodology 
 * Populate the following enviroment variables
 
 ```shell
@@ -60,13 +60,14 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --set serviceAccount.name=aws-load-balancer-controller
 ```
 
-* Deploy karpenter provisioner
+* Deploy two karpenter provisioners
 
 ```bash
-cat tlvsummit23-provisioner.yaml | envsubst | kubectl apply -f -
+cat app-arm-provisioner.yaml | envsubst | kubectl apply -f -
+cat app-amd-provisioner.yaml | envsubst | kubectl apply -f -
 ```
 
-* Create K8s service and ingress for the sample webapp
+* Create K8s service and ingress for the sample webapp with three paths: `/arm`, `/amd` and `/app`. `/app` will redirect the traffic between `/arm/` and `/amd`
 
 ```bash
 cat app-svc-ingress.yaml | envsubst | kubectl apply -f -
@@ -75,7 +76,8 @@ cat app-svc-ingress.yaml | envsubst | kubectl apply -f -
 * Deploy the sample app
 
 ```shell
-cat app-deploy.yaml | envsubst | kubectl apply -f -
+cat app-arm-deploy.yaml | envsubst | kubectl apply -f -
+cat app-amd-deploy.yaml | envsubst | kubectl apply -f -
 ```
 
 * Discover the ingress ALB endpoint
@@ -84,19 +86,32 @@ cat app-deploy.yaml | envsubst | kubectl apply -f -
 kubectl get ingress
 ```
 
-Copy the ADDRESS value and browse to http://$ADDRESS/tlvsummit23/runtime/ and notice the `instance-type` alternating between pods that runs on `arm64` and `amd64` cpus.
+Copy the ADDRESS value and browse to http://$ADDRESS/app/runtime/ and notice the `instance-type` alternating between pods that runs on `arm64` and `amd64` cpus.
 
-TODO: ADD PERF ANALYSIS WITH CW CONTAINER INSIGHTS
+* Single-Node tests - run a load simulator to test the performance within single Graviton node and single Intel/AMD node. 
+Configure the `ARM_APP_URL` and `AMD_APP_URL` with the ALB address (previous step) and deploy the app loader
 
+```shell
+kubectl apply -f app-loader.yaml
+```
+
+* Let it run for an hour and observe the CW target group metric `HTTPCode_Target_2XX_Count` under `AWS/ApplicationELB` to assess the application throughput among the two target groups. 
+
+* Multi-Node test - add [HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) that will scale the number of pods to see how Graviton throughput scales across many nodes
 ```
 kubectl autoscale deploy armsimplemultiarchapp --cpu-percent=90 --min=1 --max=100
-kubectl autoscale deploy amdsimplemultiarchapp --cpu-percent=80 --min=1 --max=100
-kubectl autoscale deploy amdsimplemultiarchproc --cpu-percent=80 --min=1 --max=100
-kubectl autoscale deploy armsimplemultiarchproc --cpu-percent=90 --min=1 --max=100
+kubectl autoscale deploy amdsimplemultiarchapp --cpu-percent=90 --min=1 --max=100
 ```
 
+## Results
 
-### Processing nerrative
-In this example, we generate two matrices of configurable sizes. We then define the number of processes to use (num_cores) and create a Pool of processes. Next, we create a list of row-column pairs to calculate by iterating over each row of the first matrix and each column of the second matrix. We then use the map method of the pool to apply the matrix_multiply function to each row-column pair in the list, resulting in a list of calculated values. Finally, we reshape the resulting list into a matrix of the appropriate size.
+![Single-node load test - App througput - c7g.large and c6a.large](./single-node-load-throughput.png)
+![Single-node load test - CPU usage - c7g.large and c6a.large](./single-node-load-cpu.png)
 
-Note that using multiprocessing for matrix multiplication may not always result in a speedup, as the overhead of creating and managing the processes can sometimes outweigh the benefits of parallelism. It is always a good idea to benchmark different implementations and compare their performance.
+![Multi-node load test - App througput - c7g.large and c6a.large](./multi-node-load-throughput.png)
+![Multi-node load test - Num of pods/nodes - c7g.large and c6a.large](./multi-node-load-nodes.png)
+
+## Analysis
+The single-node test is designed to test the application's throughput under minor and significant loads. There is no difference in throughput under minor load (<40%) but app throughput that runs on Graviton is between 30%-50% higher than app throughput that runs on Intel under heavy load >70%. That's attributed to the minimal overhead of context-switch in Graviton compared to Intel's simultaneous multithreading. 
+
+In the multi-node test, similar app throughput is tested across many nodes, which translates into cost. When the HPA threshold is crossed during >90% load, we see 7 Intel nodes compared to 3 Graviton nodes to achieve the same throughput. 
