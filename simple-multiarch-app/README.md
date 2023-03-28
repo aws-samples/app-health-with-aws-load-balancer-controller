@@ -1,4 +1,9 @@
-# Simple Web Application to demonstrate deployment of multi-arch images of ARM64 and AMD64
+# Simple Web Application to demonstrate deployment of multi-arch images of Graviton3(c7g) and Intel/AMD(c6) instacnes
+
+## Introduction
+Graviton instances can reduce compute costs up to 30% with high concurrent workloads. You can also increase your application's resilience by allowing it to run on both Intel/AMD and Graviton EC2 instances. We show you how to transform your CPU-bounded Python application into a processor-agnostic application that performs 30% faster on c7g EC2 instances than c6 EC2 instances.
+
+Firstly, we use Karpneter to launche the right EC2 instance based on application fit and availability in the AWS region after building a Docker image that supports Intel and Graviton instances. Next, we increase CPU usage by loading the application with synthetic requests. Finally, we compare application throughput on Graviton versus Intel/AMD instances throughout the load cycle.
 
 ## Methodology 
 * Populate the following enviroment variables
@@ -67,6 +72,37 @@ cat app-arm-provisioner.yaml | envsubst | kubectl apply -f -
 cat app-amd-provisioner.yaml | envsubst | kubectl apply -f -
 ```
 
+Note we used `instance-generation`, `instance-cpu`, and `arch` labels to Karpenter to launch `c7g.large` and `c6.large` or `c6a.large` instances. 
+
+```shell
+  - key: karpenter.k8s.aws/instance-generation
+    operator: In
+    values:
+    - "7"
+  - key: karpenter.k8s.aws/instance-cpu
+    operator: In
+    values:
+    - "2"
+  - key: kubernetes.io/arch
+    operator: In
+    values:
+    - arm64
+```
+
+```shell
+  - key: karpenter.k8s.aws/instance-generation
+    operator: In
+    values:
+    - "6"
+  - key: karpenter.k8s.aws/instance-cpu
+    operator: In
+    values:
+    - "2"
+  - key: kubernetes.io/arch
+    operator: In
+    values:
+    - amd64
+```
 * Create K8s service and ingress for the sample webapp with three paths: `/arm`, `/amd` and `/app`. `/app` will redirect the traffic between `/arm/` and `/amd`
 
 ```bash
@@ -84,6 +120,79 @@ cat app-amd-deploy.yaml | envsubst | kubectl apply -f -
 
 ```shell
 kubectl get ingress
+```
+
+Note we used two k8s services to route traffic to the Graviton and Intel powered pods. Note the `service.selector.app` in both services and the one specified in the `deployment.template.metadata.labels.app`
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: armsimplemultiarchapp-svc
+spec:
+  selector:
+    app: armsimplemultiarchapp
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: amdsimplemultiarchapp-svc
+spec:
+  selector:
+    app: amdsimplemultiarchapp
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: NodePort
+---
+```
+
+We then use the two service in the ingress definition to route to the appropriate prefix (`/amd` or `/arm`). We implemented data [sampling](./app/views.py) to altenrate traffic when users issue general request.  
+
+```python
+from django.shortcuts import redirect
+import random
+
+def redirect_view(request):
+  app_number=random.randint(1,2)
+  if app_number==1:
+    redirect_to='/arm/runtime'
+  if app_number==2:
+    redirect_to='/amd/runtime'
+  response = redirect(redirect_to)
+  return response
+```
+
+```shell
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /app
+            pathType: Prefix
+            backend:
+              service:
+                name: amdsimplemultiarchapp-svc
+                port:
+                  number: 80
+          - path: /amd
+            pathType: Prefix
+            backend:
+              service:
+                name: amdsimplemultiarchapp-svc
+                port:
+                  number: 80
+          - path: /arm
+            pathType: Prefix
+            backend:
+              service:
+                name: armsimplemultiarchapp-svc
+                port:
+                  number: 80
 ```
 
 Copy the ADDRESS value and browse to http://$ADDRESS/app/runtime/ and notice the `instance-type` alternating between pods that runs on `arm64` and `amd64` cpus.
@@ -115,3 +224,9 @@ kubectl autoscale deploy amdsimplemultiarchapp --cpu-percent=90 --min=1 --max=10
 The single-node test is designed to test the application's throughput under minor and significant loads. There is no difference in throughput under minor load (<40%) but app throughput that runs on Graviton is between 30%-50% higher than app throughput that runs on Intel under heavy load >70%. That's attributed to the minimal overhead of context-switch in Graviton compared to Intel's simultaneous multithreading. 
 
 In the multi-node test, similar app throughput is tested across many nodes, which translates into cost. When the HPA threshold is crossed during >90% load, we see 7 Intel nodes compared to 3 Graviton nodes to achieve the same throughput. 
+
+## Conclusion
+
+Graviton3 performance benefits are shown during heavy load compared to Intel processors because of the 1 vCPU to 1 physical processor core mapping and large cache (L1, L2, and L3). 
+
+Also, docker images that run on both Graviton and Intel processors helps to procure capacity from multiple EC2 Instance pools (Spot and on-demand) 
