@@ -32,7 +32,7 @@ docker buildx create --name craftbuilder
 ./buildx.sh
 ```
 
-We used `docker buildx` for simplicity but there are cases where the buildx emulator throws exceptions or too slow. In such cases we reccomend using [native `docker build` follow by `docker manifest](https://github.com/aws-samples/containerized-game-servers/blob/master/supertuxkart/multi-arch-ci.md)
+We used `docker buildx` for simplicity but there are cases where the buildx emulator throws exceptions or too slow. In such cases we reccomend using [native `docker build` follow by `docker manifest`](https://github.com/aws-samples/containerized-game-servers/blob/master/supertuxkart/multi-arch-ci.md)
 
 * Deploy Karpenter
 Follow https://karpenter.sh for cluster and karpneter install
