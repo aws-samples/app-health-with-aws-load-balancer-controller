@@ -213,10 +213,11 @@ kubectl autoscale deploy amdsimplemultiarchapp --cpu-percent=90 --min=1 --max=10
 ```
 
 ## Results
-
+### Single-node load test
 ![Single-node load test - App througput - c7g.large and c6a.large](./single-node-load-throughput.png)
 ![Single-node load test - CPU usage - c7g.large and c6a.large](./single-node-load-cpu.png)
 
+### Multi-node load test
 ![Multi-node load test - App througput - c7g.large and c6a.large](./multi-node-load-throughput.png)
 ![Multi-node load test - Num of pods/nodes - c7g.large and c6a.large](./multi-node-load-nodes.png)
 
