@@ -122,6 +122,9 @@ We simulated CPU usage by the application with numpy matrix multiplication of tw
 
 ```python
 import numpy as np
+import pandas as pd
+
+_matrix_dim=int(os.environ['MATRIX_DIM'])
 
 df1 = pd.DataFrame(data=np.random.randint(_matrix_dim,size=(_matrix_dim,_matrix_dim)));
 df2 = pd.DataFrame(data=np.random.randint(_matrix_dim,size=(_matrix_dim,_matrix_dim)));
