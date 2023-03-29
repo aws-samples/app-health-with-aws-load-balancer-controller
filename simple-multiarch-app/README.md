@@ -32,6 +32,8 @@ docker buildx create --name craftbuilder
 ./buildx.sh
 ```
 
+We used `docker buildx` for simplicity but there are cases where the buildx emulator throws exceptions or too slow. In such cases we reccomend using [native `docker build` follow by `docker manifest](https://github.com/aws-samples/containerized-game-servers/blob/master/supertuxkart/multi-arch-ci.md)
+
 * Deploy Karpenter
 Follow https://karpenter.sh for cluster and karpneter install
 
@@ -151,7 +153,7 @@ spec:
 ---
 ```
 
-We then use the two service in the ingress definition to route to the appropriate prefix (`/amd` or `/arm`). We implemented data [sampling](./app/views.py) to altenrate traffic when users issue general request.  
+We then use the two service in the ingress definition to route to the appropriate prefix (`/amd` or `/arm`) that AWS Load Balancer Controller creates two target groups. We are going to use the target groups CW to measure the application throughput per processor type. We implemented data [sampling](./app/views.py) to altenrate traffic when users issue general request.  
 
 ```python
 from django.shortcuts import redirect
@@ -224,7 +226,7 @@ kubectl autoscale deploy amdsimplemultiarchapp --cpu-percent=90 --min=1 --max=10
 ## Analysis
 The single-node test is designed to test the application's throughput under minor and significant loads. There is no difference in throughput under minor load (<40%) but app throughput that runs on Graviton is between 30%-50% higher than app throughput that runs on Intel under heavy load >70%. That's attributed to the minimal overhead of context-switch in Graviton compared to Intel's simultaneous multithreading. 
 
-In the multi-node test, similar app throughput is tested across many nodes, which translates into cost. When the HPA threshold is crossed during >90% load, we see 7 Intel nodes compared to 3 Graviton nodes to achieve the same throughput. 
+In the multi-node test, similar app throughput is tested across 50 nodes, which translates into cost. When the HPA threshold is crossed during >90% load, we see 30% better Graviton utilization, 56 Intel nodes compared to 43 Graviton nodes to achieve the same throughput. 
 
 ## Conclusion
 
