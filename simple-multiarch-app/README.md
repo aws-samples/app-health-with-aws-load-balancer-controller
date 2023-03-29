@@ -118,6 +118,16 @@ cat app-arm-deploy.yaml | envsubst | kubectl apply -f -
 cat app-amd-deploy.yaml | envsubst | kubectl apply -f -
 ```
 
+We simulated CPU usage by the application with numpy matrix multiplication of two random generated pandas DataFrames using `numpy.matmul`. We used `_matrix_dim,` to control the CPU usage. Larger value casues more CPU usage. The baseline is `MATRIX_DIM=500` will cap the c7g.large and c6a.large to 80% CPU usage.
+
+```python
+import numpy as np
+
+df1 = pd.DataFrame(data=np.random.randint(_matrix_dim,size=(_matrix_dim,_matrix_dim)));
+df2 = pd.DataFrame(data=np.random.randint(_matrix_dim,size=(_matrix_dim,_matrix_dim)));
+df12 = np.matmul(df1,df2)
+```
+
 * Discover the ingress ALB endpoint
 
 ```shell
