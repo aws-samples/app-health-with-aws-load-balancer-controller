@@ -1,0 +1,38 @@
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: tlvsummit23amd
+spec:
+  requirements:
+  - key: karpenter.k8s.aws/instance-generation
+    operator: In
+    values:
+    - "6"
+  - key: karpenter.k8s.aws/instance-cpu
+    operator: In 
+    values:
+    - "2"
+  - key: karpenter.sh/capacity-type
+    operator: In
+    values: 
+    - on-demand
+  - key: kubernetes.io/arch
+    operator: In
+    values:
+    - amd64
+  limits:
+    resources:
+      cpu: 1000
+  providerRef:
+    name: default
+  ttlSecondsAfterEmpty: 30
+---
+apiVersion: karpenter.k8s.aws/v1alpha1
+kind: AWSNodeTemplate
+metadata:
+  name: default
+spec:
+  subnetSelector:
+    karpenter.sh/discovery: $CLUSTER_NAME
+  securityGroupSelector:
+    karpenter.sh/discovery: $CLUSTER_NAME

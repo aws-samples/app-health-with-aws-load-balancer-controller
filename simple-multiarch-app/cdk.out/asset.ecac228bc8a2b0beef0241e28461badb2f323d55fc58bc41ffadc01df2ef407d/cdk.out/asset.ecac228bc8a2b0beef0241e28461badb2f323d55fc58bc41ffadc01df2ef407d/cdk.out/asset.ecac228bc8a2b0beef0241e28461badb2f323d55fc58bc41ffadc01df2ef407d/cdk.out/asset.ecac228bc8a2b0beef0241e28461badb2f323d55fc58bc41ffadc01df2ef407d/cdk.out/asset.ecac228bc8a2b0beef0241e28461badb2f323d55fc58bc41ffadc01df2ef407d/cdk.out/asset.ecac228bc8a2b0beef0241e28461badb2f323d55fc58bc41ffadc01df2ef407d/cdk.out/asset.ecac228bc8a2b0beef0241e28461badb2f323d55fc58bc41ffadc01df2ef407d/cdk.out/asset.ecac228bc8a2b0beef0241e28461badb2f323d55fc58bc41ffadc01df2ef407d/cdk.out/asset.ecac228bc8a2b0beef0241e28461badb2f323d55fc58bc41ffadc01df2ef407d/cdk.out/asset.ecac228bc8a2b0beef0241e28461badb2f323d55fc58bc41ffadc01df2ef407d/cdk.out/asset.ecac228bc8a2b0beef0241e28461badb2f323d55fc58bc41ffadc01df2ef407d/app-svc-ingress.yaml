@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: armsimplemultiarchapp-svc
+spec:
+  selector:
+    app: armsimplemultiarchapp
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: amdsimplemultiarchapp-svc
+spec:
+  selector:
+    app: amdsimplemultiarchapp
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: simplemultiarchapp-ingress
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /app/health/
+    alb.ingress.kubernetes.io/success-codes: '200-301'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:907513986313:certificate/fa540fc3-11c7-4926-8d4d-978a8e757f0d
+    alb.ingress.kubernetes.io/load-balancer-name: simplemultiarchapp
+    alb.ingress.kubernetes.io/group.name: simplemultiarchapp
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /app
+            pathType: Prefix
+            backend:
+              service:
+                name: amdsimplemultiarchapp-svc
+                port: 
+                  number: 80
+          - path: /amd
+            pathType: Prefix
+            backend:
+              service:
+                name: amdsimplemultiarchapp-svc
+                port: 
+                  number: 80
+          - path: /arm
+            pathType: Prefix
+            backend:
+              service:
+                name: armsimplemultiarchapp-svc
+                port: 
+                  number: 80

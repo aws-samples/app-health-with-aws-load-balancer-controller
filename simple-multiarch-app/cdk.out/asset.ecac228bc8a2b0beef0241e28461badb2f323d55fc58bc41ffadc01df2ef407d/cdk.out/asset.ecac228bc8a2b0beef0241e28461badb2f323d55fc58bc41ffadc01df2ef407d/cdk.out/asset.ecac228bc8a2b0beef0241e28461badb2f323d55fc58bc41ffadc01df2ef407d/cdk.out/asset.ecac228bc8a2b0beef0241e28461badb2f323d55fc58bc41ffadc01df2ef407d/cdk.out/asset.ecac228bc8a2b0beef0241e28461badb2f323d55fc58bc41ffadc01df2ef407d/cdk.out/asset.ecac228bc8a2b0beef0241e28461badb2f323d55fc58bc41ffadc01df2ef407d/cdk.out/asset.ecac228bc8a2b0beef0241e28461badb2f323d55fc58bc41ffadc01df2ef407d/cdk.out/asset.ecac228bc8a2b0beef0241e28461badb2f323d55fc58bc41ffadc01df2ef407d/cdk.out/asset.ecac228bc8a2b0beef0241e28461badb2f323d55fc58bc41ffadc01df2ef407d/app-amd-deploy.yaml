@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amdsimplemultiarchapp
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: amdsimplemultiarchapp
+  template:
+    metadata:
+      labels:
+        app: amdsimplemultiarchapp
+    spec:
+      nodeSelector:
+        karpenter.sh/provisioner-name: tlvsummit23amd
+      serviceAccountName: appsimulator
+      containers:
+      - name: app
+        env:
+        - name: APP_QUEUE
+          value: "https://sqs.$AWS_REGION.amazonaws.com/$AWS_ACCOUNT_ID/amdsimpleapp"
+        - name: MATRIX_DIM
+          value: "500"
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/simplemultiarchimage:multiarch-py3
+        imagePullPolicy: Always
+        command: ["/usr/src/app/start.sh"]
+        resources:
+          requests:
+            cpu: 1000m
+            #memory: DONT SPECIFY becasue app is bounded by CPU
+          limits:
+            cpu: 4000m
+            #memory: DONT SPECIFY becasue app is bounded by CPU
+        ports:
+          - containerPort: 8000
+        livenessProbe:
+          httpGet:
+            path: /amd/health/
+            port: 8000
+          initialDelaySeconds: 3
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /amd/health/
+            port: 8000
+          initialDelaySeconds: 3
+          periodSeconds: 3

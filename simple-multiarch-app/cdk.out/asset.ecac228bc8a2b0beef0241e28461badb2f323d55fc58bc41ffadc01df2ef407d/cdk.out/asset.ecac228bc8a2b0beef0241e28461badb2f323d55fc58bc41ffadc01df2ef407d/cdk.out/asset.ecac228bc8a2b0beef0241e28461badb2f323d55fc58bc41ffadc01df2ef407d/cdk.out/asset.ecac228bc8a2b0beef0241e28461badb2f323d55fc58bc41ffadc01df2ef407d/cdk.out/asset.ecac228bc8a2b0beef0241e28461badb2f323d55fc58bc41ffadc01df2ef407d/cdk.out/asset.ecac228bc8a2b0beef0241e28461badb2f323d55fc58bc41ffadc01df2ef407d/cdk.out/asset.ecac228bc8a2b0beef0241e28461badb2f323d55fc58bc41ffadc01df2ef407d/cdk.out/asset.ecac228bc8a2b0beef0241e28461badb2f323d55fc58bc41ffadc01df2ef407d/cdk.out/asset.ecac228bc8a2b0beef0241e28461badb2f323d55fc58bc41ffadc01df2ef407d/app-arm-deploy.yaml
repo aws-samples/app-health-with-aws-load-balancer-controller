@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: armsimplemultiarchapp
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: armsimplemultiarchapp
+  template:
+    metadata:
+      labels:
+        app: armsimplemultiarchapp
+    spec:
+      nodeSelector:
+        karpenter.sh/provisioner-name: tlvsummit23arm
+      serviceAccountName: appsimulator
+      containers:
+      - name: app
+        env:
+        - name: APP_QUEUE
+          value: "https://sqs.$AWS_REGION.amazonaws.com/$AWS_ACCOUNT_ID/armsimpleapp"
+        - name: MATRIX_DIM
+          value: "500" #THATS THE VARIABLE THAT MAKES THE POD CONSUME CPU
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/simplemultiarchimage:multiarch-py3
+        imagePullPolicy: Always
+        command: ["/usr/src/app/start.sh"]
+        resources:
+          requests:
+            cpu: 1000m
+            #memory: 512Mi        
+          limits:
+            cpu: 4000m
+            #memory: 512Mi        
+        ports:
+          - containerPort: 8000
+        livenessProbe:
+          httpGet:
+            path: /arm/health/
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /arm/health/
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5

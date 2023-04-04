@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simplemultiarchapp
+  namespace: default
+  labels:
+    app: simplemultiarchapp
+spec:
+  selector:
+    matchLabels:
+      app: simplemultiarchapp
+  template:
+    metadata:
+      labels:
+        app: simplemultiarchapp
+    spec:
+      nodeSelector:
+        karpenter.sh/provisioner-name: tlvsummit23
+      containers:
+      - name: app
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${APP_IMAGE_NAME}:${APP_IMAGE_TAG}
+        imagePullPolicy: Always
+        command: ["/usr/src/app/start.sh"]
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi        
+        ports:
+          - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /tlvsummit23/runtime
+            port: 8000
+          initialDelaySeconds: 3
+          periodSeconds: 3
