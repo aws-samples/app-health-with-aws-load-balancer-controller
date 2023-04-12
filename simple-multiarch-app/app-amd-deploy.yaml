@@ -18,8 +18,8 @@ spec:
       containers:
       - name: app
         env:
-        - name: APP_QUEUE
-          value: "https://sqs.$AWS_REGION.amazonaws.com/$AWS_ACCOUNT_ID/amdsimpleapp"
+        - name: APP_ENDPOINT
+          value: "simplemultiarchapp-453153653.us-west-2.elb.amazonaws.com"
         - name: MATRIX_DIM
           value: "500"
         - name: POD_IP

@@ -9,7 +9,6 @@ import uuid
 import boto3
 
 sqs_client=boto3.client('sqs')
-app_queue=os.environ['APP_QUEUE']
 
 _pod_name=os.environ['POD_NAME']
 _pod_ip=os.environ['POD_IP']

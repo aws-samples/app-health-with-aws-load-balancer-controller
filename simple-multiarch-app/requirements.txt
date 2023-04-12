@@ -3,3 +3,4 @@ django-sslserver
 boto3
 pandas
 numpy
+requests
