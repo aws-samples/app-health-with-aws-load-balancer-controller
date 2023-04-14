@@ -5,6 +5,6 @@ from . import health
 
 
 urlpatterns = [
-  path("runtime/",views.redirect_view,name="redirect_view"),
+  path("runtime/",views.get_runtime,name="get_runtime"),
   path("health/",health.show,name="health"),
 ]
