@@ -141,7 +141,7 @@ kubectl get ingress
 
 Note we used two k8s services to route traffic to the Graviton and Intel powered pods. Note the `service.selector.app` in both services and the one specified in the `deployment.template.metadata.labels.app`
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -168,48 +168,37 @@ spec:
 ---
 ```
 
-We then use the two service in the ingress definition to route to the appropriate prefix (`/amd` or `/arm`) that AWS Load Balancer Controller creates two target groups. We are going to use the target groups CW to measure the application throughput per processor type. We implemented data [sampling](./app/views.py) to altenrate traffic when users issue general request.  
+We use Application Load Balancer  with the AWS Load Balancer Controller to spread the load among the Graviton and x86 compute pools. We control the traffic routing with the alb.ingress.kuberenetes.io/actions.weighted-routing annotation
 
-```python
-from django.shortcuts import redirect
-import random
+```yaml
+alb.ingress.kubernetes.io/actions.weighted-routing: | 
+{
+  "type":"forward",
+  "forwardConfig":{
+  "targetGroups":[
+    {
+      "serviceName":"armsimplemultiarchapp-svc",
+      "servicePort":"80","weight":50
+    },
+    {
+      "serviceName":"amdsimplemultiarchapp-svc",
+      "servicePort":"80","weight":50}]
+    }
+ }'
 
-def redirect_view(request):
-  app_number=random.randint(1,2)
-  if app_number==1:
-    redirect_to='/arm/runtime'
-  if app_number==2:
-    redirect_to='/amd/runtime'
-  response = redirect(redirect_to)
-  return response
-```
-
-```shell
 spec:
+  ingressClassName: alb
   rules:
     - http:
         paths:
-          - path: /app
+          - path: /
             pathType: Prefix
             backend:
               service:
-                name: amdsimplemultiarchapp-svc
+                name: weighted-routing
                 port:
-                  number: 80
-          - path: /amd
-            pathType: Prefix
-            backend:
-              service:
-                name: amdsimplemultiarchapp-svc
-                port:
-                  number: 80
-          - path: /arm
-            pathType: Prefix
-            backend:
-              service:
-                name: armsimplemultiarchapp-svc
-                port:
-                  number: 80
+                  name: use-annotation
+
 ```
 
 Copy the ADDRESS value and browse to http://$ADDRESS/app/runtime/ and notice the `instance-type` alternating between pods that runs on `arm64` and `amd64` cpus.
