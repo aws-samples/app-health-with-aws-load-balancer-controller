@@ -231,15 +231,16 @@ kubectl autoscale deploy amdsimplemultiarchapp --cpu-percent=90 --min=1 --max=10
 
 ## Results
 ### Single-node load test
-![Single-node load test - App througput - c7g.large and c6a.large](./single-node-load-throughput.png)
-![Single-node load test - CPU usage - c7g.large and c6a.large](./single-node-load-cpu.png)
+![Single-node load test - CPU usage and App througput - c7g.large and c6a.large](./single-node-load-baseline.png)
 
 ### Multi-node load test
 ![Multi-node load test - App througput - c7g.large and c6a.large](./multi-node-load-throughput.png)
 ![Multi-node load test - Num of pods/nodes - c7g.large and c6a.large](./multi-node-load-nodes.png)
 
 ## Analysis
-The single-node test is designed to test the application's throughput under minor and significant loads. There is no difference in throughput under minor load (<40%) but app throughput that runs on Graviton is between 30%-50% higher than app throughput that runs on Intel under heavy load >70%. That's attributed to the minimal overhead of context-switch in Graviton compared to Intel's simultaneous multithreading. 
+The single-node test is designed to test the application's throughput under minor and significant loads. There is small difference in throughput under minor load (<70%) but app throughput that runs on Graviton is between 30%-50% higher than app throughput that runs on Intel under heavy load >70%. That's attributed to the minimal overhead of context-switch in Graviton compared to Intel's simultaneous multithreading. 
+
+We consider the load valid until the application fails and returns HTTP 5XX for more than 1% of the load. We noticed that the X86-based app fails when the CPU Utilization crosses 80% and the Graviton crosses 90%. 
 
 In the multi-node test, similar app throughput is tested across 50 nodes, which translates into cost. When the HPA threshold is crossed during >90% load, we see 30% better Graviton utilization, 56 Intel nodes compared to 43 Graviton nodes to achieve the same throughput. 
 
