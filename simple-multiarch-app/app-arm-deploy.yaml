@@ -18,8 +18,10 @@ spec:
       containers:
       - name: app
         env:
-        - name: APP_ENDPOINT
-          value: "simplemultiarchapp-453153653.us-west-2.elb.amazonaws.com"
+        - name: ARCH
+          value: "arm64"
+        - name: CW_NS
+          value: "appsimulator"
         - name: MATRIX_DIM
           value: "500" #THATS THE VARIABLE THAT MAKES THE POD CONSUME CPU
         - name: POD_IP
@@ -44,13 +46,13 @@ spec:
           - containerPort: 8000
         livenessProbe:
           httpGet:
-            path: /arm/health/
+            path: /app/health/
             port: 8000
           initialDelaySeconds: 5
           periodSeconds: 5
         readinessProbe:
           httpGet:
-            path: /arm/health/
+            path: /app/health/
             port: 8000
           initialDelaySeconds: 5
           periodSeconds: 5

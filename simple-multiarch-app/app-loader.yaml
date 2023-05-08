@@ -25,9 +25,9 @@ spec:
         - name: SLEEP_BETWEEN_CYCLE
           value: "10"
         - name: ARM_APP_URL
-          value: "http://simplemultiarchapp-453153653.us-west-2.elb.amazonaws.com/arm"
+          value: "http://simplemultiarchapp-292419503.us-west-2.elb.amazonaws.com/app"
         - name: AMD_APP_URL
-          value: "http://simplemultiarchapp-453153653.us-west-2.elb.amazonaws.com/amd"
+          value: "http://simplemultiarchapp-292419503.us-west-2.elb.amazonaws.com/app"
         - name: DEPLOY_NAME
           value: "appsimulator"
         image: 907513986313.dkr.ecr.us-west-2.amazonaws.com/simplemultiarchimage:multiarch-py3

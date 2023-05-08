@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: loadsimu
+  name: loadsimu
+spec:
+#  replicas: 1
+  selector:
+    matchLabels:
+      app: loadsimu
+  template:
+    metadata:
+      labels:
+        app: loadsimu
+    spec:
+      nodeSelector:
+        karpenter.sh/provisioner-name: apploader
+      serviceAccountName: appsimulator
+      containers:
+      - env:
+        - name: QUEUE_URL
+          value: "https://sqs.us-west-2.amazonaws.com/907513986313/appsimulator"
+        - name: RADIAN_INTERVAL
+          value: "0.3"
+        - name: RADIAN_MAX
+          value: "3.14"
+        - name: CLIENT_SCALE_RATIO
+          value: "1"
+        - name: MIN_AT_CYCLE_START
+          value: "1"
+        - name: CLIENT_DEPLOY_PREFIX
+          value: "apploader"
+        - name: DEPLOY_NAME
+          value: "appsimulator"
+        - name: MIN_SLEEP_BETWEEN_CYCLE
+          value: "10"
+        - name: MAX_SLEEP_BETWEEN_CYCLE
+          value: "10"
+        image: 907513986313.dkr.ecr.us-west-2.amazonaws.com/simplemultiarchimage:multiarch-py3
+        imagePullPolicy: Always
+        name: loadsimu
+        command: ["/usr/src/app/appsimulator.sh"]
+        ##resources:
+        #  requests:
+        #    cpu: 1000m
+        #    memory: 512Mi
+        #  limits:
+        #    cpu: 1000m
+        #    memory: 512Mi
