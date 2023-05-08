@@ -16,7 +16,7 @@ export APP_IMAGE_NAME=simplemultiarchimage
 export APP_IMAGE_TAG=multiarch-py3
 export APP_IMAGE_ARM_TAG=multiarch-py3-arm
 export APP_IMAGE_AMD_TAG=multiarch-py3-amd
-export CLUSTER_NAME=grv-usw2
+export CLUSTER_NAME=lyra-usw2
 export KARPENTER_VERSION=v0.27.0
 export AWS_DEFAULT_REGION=us-west-2
 export TEMPOUT=$(mktemp)
@@ -110,7 +110,7 @@ Note we used `instance-generation`, `instance-cpu`, and `arch` labels to Karpent
 * Create K8s service and ingress for the sample webapp with three paths: `/arm`, `/amd` and `/app`. `/app` will redirect the traffic between `/arm/` and `/amd`
 
 ```bash
-cat app-svc-ingress.yaml | envsubst | kubectl apply -f -
+cat app-ingress-weighted-routing.yaml | envsubst | kubectl apply -f -
 ```
 
 * Deploy the sample app

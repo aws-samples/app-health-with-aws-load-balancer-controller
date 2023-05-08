@@ -18,8 +18,10 @@ spec:
       containers:
       - name: app
         env:
-        - name: APP_ENDPOINT
-          value: "simplemultiarchapp-453153653.us-west-2.elb.amazonaws.com"
+        - name: ARCH
+          value: "amd64"
+        - name: CW_NS
+          value: "appsimulator"
         - name: MATRIX_DIM
           value: "500"
         - name: POD_IP
@@ -36,21 +38,19 @@ spec:
         resources:
           requests:
             cpu: 1000m
-            #memory: DONT SPECIFY becasue app is bounded by CPU
           limits:
             cpu: 4000m
-            #memory: DONT SPECIFY becasue app is bounded by CPU
         ports:
           - containerPort: 8000
         livenessProbe:
           httpGet:
-            path: /amd/health/
+            path: /app/health/
             port: 8000
           initialDelaySeconds: 3
           periodSeconds: 3
         readinessProbe:
           httpGet:
-            path: /amd/health/
+            path: /app/health/
             port: 8000
           initialDelaySeconds: 3
           periodSeconds: 3
