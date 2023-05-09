@@ -1,5 +1,5 @@
-#FROM public.ecr.aws/docker/library/python:slim
-FROM python:3.9
+FROM public.ecr.aws/docker/library/python:slim
+#FROM python:3.9
 RUN apt-get update -y --fix-missing
 RUN apt-get install -y vim net-tools telnet jq unzip curl
 
