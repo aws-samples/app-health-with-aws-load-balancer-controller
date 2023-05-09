@@ -19,6 +19,10 @@ export APP_IMAGE_AMD_TAG=multiarch-py3-amd
 export CLUSTER_NAME=lyra-usw2
 export KARPENTER_VERSION=v0.27.0
 export AWS_DEFAULT_REGION=us-west-2
+export GITHUB_OAUTH_TOKEN=create classic token - Settings->Developer settins -> Tokens (classic)
+export GITHUB_USER=yahavb
+export GITHUB_BRANCH=main
+export GITHUB_REPO=app-health-with-aws-load-balancer-controller
 export TEMPOUT=$(mktemp)
 ```
 
