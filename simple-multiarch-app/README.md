@@ -10,19 +10,19 @@ Firstly, we use Karpneter to launche the right EC2 instance based on application
 
 ```shell
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
-export AWS_REGION=us-west-2
+export AWS_REGION=us-east-1
+export AWS_DEFAULT_REGION=us-east-1
 export BUILDX_VER=v0.10.3
 export APP_IMAGE_NAME=simplemultiarchimage
 export APP_IMAGE_TAG=multiarch-py3
 export APP_IMAGE_ARM_TAG=multiarch-py3-arm
 export APP_IMAGE_AMD_TAG=multiarch-py3-amd
-export CLUSTER_NAME=lyra-usw2
+export CLUSTER_NAME=grv-use1
 export KARPENTER_VERSION=v0.27.0
-export AWS_DEFAULT_REGION=us-west-2
-export GITHUB_OAUTH_TOKEN=create classic token - Settings->Developer settins -> Tokens (classic)
 export GITHUB_USER=yahavb
 export GITHUB_BRANCH=main
 export GITHUB_REPO=app-health-with-aws-load-balancer-controller
+export GITHUB_OAUTH_TOKEN=create classic token - Settings->Developer settings -> Tokens (classic)
 export TEMPOUT=$(mktemp)
 ```
 
