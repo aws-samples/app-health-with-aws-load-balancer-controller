@@ -46,7 +46,7 @@ export class AppPipelineStack extends Stack {
 
   //create a roleARN for codebuild 
   const buildRole = new iam.Role(this, 'AppCodeBuildDeployRole',{
-    roleName: "AppCodeBuildDeployRole",
+    roleName: process.env.AWS_REGION+"AppCodeBuildDeployRole",
     assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
   });
   
