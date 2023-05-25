@@ -16,17 +16,12 @@ RUN tcpdump --version
 RUN which tcpdump
 
 #Install kubectl for the simulator pod scaler
-#RUN apt-get install -y apt-transport-https ca-certificates
-
-#RUN curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-#RUN echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
-#RUN apt-get update && \
-#    apt-get install -y apt-transport-https ca-certificates curl && \
-#    curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg && \
-#    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list && \
-#    apt-get update && \
-#    apt-get install -y kubectl
-#RUN kubectl version --client
+RUN apt-get install -y apt-transport-https ca-certificates
+RUN curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+RUN apt-get update
+RUN apt-get install -y kubectl
+RUN kubectl version --client
 
 WORKDIR /usr/src/app
 COPY requirements.txt ./
