@@ -1,7 +1,7 @@
 FROM public.ecr.aws/docker/library/python:slim
 #FROM python:3.9
 RUN apt-get update -y --fix-missing
-RUN apt-get install -y vim net-tools telnet jq unzip curl gnupg2
+RUN apt-get install -y vim net-tools telnet jq unzip curl gnupg2 apt-utils
 
 RUN /usr/local/bin/python -m pip install --upgrade pip
 RUN pip install ec2-metadata
@@ -20,11 +20,13 @@ RUN which tcpdump
 
 #RUN curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 #RUN echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
-RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
-RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-RUN apt-get update
-RUN apt-get install -y kubectl
-RUN kubectl version --client
+#RUN apt-get update && \
+#    apt-get install -y apt-transport-https ca-certificates curl && \
+#    curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg && \
+#    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list && \
+#    apt-get update && \
+#    apt-get install -y kubectl
+#RUN kubectl version --client
 
 WORKDIR /usr/src/app
 COPY requirements.txt ./
