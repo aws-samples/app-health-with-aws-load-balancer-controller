@@ -9,6 +9,7 @@ import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sm from "aws-cdk-lib/aws-secretsmanager";
+import console = require('console');
 
 export class AppPipelineStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {

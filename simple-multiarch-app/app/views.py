@@ -35,12 +35,13 @@ def get_runtime(request):
     print("df12={}".format(df12)) 
     sys.stdout.flush()
     context = {"instance_runtime":runtime_obj}
+    metric=_arch+"_200"
     response = cloudwatch_client.put_metric_data(
       MetricData = [
         {
-          'MetricName': _arch,
+          'MetricName': metric,
           'Unit': 'Count',
-          'Value': 200 
+          'Value': 1 
         },
       ],
       Namespace=_cloudwatch_namespace
@@ -48,12 +49,13 @@ def get_runtime(request):
     print("response from cw".format(response)) 
     sys.stdout.flush()
   except:
+    metric=_arch+"_504"
     response = cloudwatch_client.put_metric_data(
       MetricData = [
         {
           'MetricName': _arch,
           'Unit': 'Count',
-          'Value': 504
+          'Value': 1
         },
       ],
       Namespace=_cloudwatch_namespace
