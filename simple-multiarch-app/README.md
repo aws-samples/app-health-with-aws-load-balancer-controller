@@ -10,7 +10,8 @@ Firstly, we use Karpneter to launche the right EC2 instance based on application
 
 ```shell
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
-export AWS_REGION=us-west-2
+export AWS_REGION=us-east-1
+export AWS_DEFAULT_REGION=us-east-1
 export BUILDX_VER=v0.10.3
 export APP_IMAGE_NAME=simplemultiarchimage
 export APP_IMAGE_TAG=multiarch-py3
@@ -20,6 +21,10 @@ export GITHUB_USER=yahavb
 export GITHUB_BRANCH=main
 export GITHUB_REPO=app-health-with-aws-load-balancer-controller
 export CLUSTER_NAME=grv-usw2
+export GITHUB_USER=yahavb
+export GITHUB_BRANCH=main
+export GITHUB_REPO=app-health-with-aws-load-balancer-controller
+export GITHUB_OAUTH_TOKEN=create classic token - Settings->Developer settings -> Tokens (classic)
 ```
 
 * Enable multi-arch builds (linux/arm64 and linux/amd64)

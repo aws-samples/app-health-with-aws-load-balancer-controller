@@ -164,13 +164,11 @@ export class AppPipelineStack extends Stack {
     ),
   });
     
-  //we allow the buildProject principal to push images to ecr
   app_registry.grantPullPush(app_image_buildx.grantPrincipal);
   app_registry.grantPullPush(app_image_arm_build.grantPrincipal);
   app_registry.grantPullPush(app_image_amd_build.grantPrincipal);
   app_registry.grantPullPush(app_image_assembly.grantPrincipal);
 
-  // here we define our pipeline and put together the assembly line
   const sourceOutput = new codepipeline.Artifact();
 
   const appbuildpipeline = new codepipeline.Pipeline(this,`AppBasePipeline`);
