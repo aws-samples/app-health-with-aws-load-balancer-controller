@@ -46,7 +46,7 @@ for i in $_seq; do
 
   clients=`echo $(( (sinx * $CLIENT_SCALE_RATIO) + $MIN_AT_CYCLE_START ))`
 
-  kubectl scale deploy/$CLIENT_DEPLOY_PREFIX --replicas=$clients
+  kubectl scale --replicas=$clients deploy/$CLIENT_DEPLOY_PREFIX 
   aws cloudwatch put-metric-data --metric-name app_workers --namespace ${DEPLOY_NAME} --value ${clients}
   echo "app_workers(clients)="$clients" sinx="$sinx
 
