@@ -16,10 +16,10 @@ export APP_IMAGE_NAME=simplemultiarchimage
 export APP_IMAGE_TAG=multiarch-py3
 export APP_IMAGE_ARM_TAG=multiarch-py3-arm
 export APP_IMAGE_AMD_TAG=multiarch-py3-amd
-export CLUSTER_NAME=lyra-usw2
-export KARPENTER_VERSION=v0.27.0
-export AWS_DEFAULT_REGION=us-west-2
-export TEMPOUT=$(mktemp)
+export GITHUB_USER=yahavb
+export GITHUB_BRANCH=main
+export GITHUB_REPO=app-health-with-aws-load-balancer-controller
+export CLUSTER_NAME=grv-usw2
 ```
 
 * Enable multi-arch builds (linux/arm64 and linux/amd64)

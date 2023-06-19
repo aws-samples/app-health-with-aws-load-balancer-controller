@@ -1,4 +1,6 @@
-import { Stack, StackProps, CfnParameter  } from 'aws-cdk-lib';
+#!/usr/bin/env node
+
+import { Stack, StackProps,CfnParameter,SecretValue} from 'aws-cdk-lib';
 import { Construct } from 'constructs'
 import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
@@ -6,6 +8,7 @@ import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as sm from "aws-cdk-lib/aws-secretsmanager";
 
 export class AppPipelineStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -15,31 +18,25 @@ export class AppPipelineStack extends Stack {
   const APP_IMAGE_TAG = new CfnParameter(this,"APPIMAGETAG",{type:"String"});
   const APP_IMAGE_AMD_TAG = new CfnParameter(this,"APPIMAGEAMDTAG",{type:"String"});
   const APP_IMAGE_ARM_TAG = new CfnParameter(this,"APPIMAGEARMTAG",{type:"String"});
-
-  
-  //codecommit repository that will contain the containerized app to build
-  const app_gitrepo = new codecommit.Repository(this, `app_gitrepo`, {
-    repositoryName:APP_IMAGE_NAME.valueAsString,
-    description: "Git repository for the pipeline, includes all the build phases",
-    code: codecommit.Code.fromDirectory('./','main'),
-  });
-  //const gitrepo = codecommit.Repository.fromRepositoryName(this,`gitrepo`,CODE_COMMIT_REPO.valueAsString)
-    
-  const app_registry = new ecr.Repository(this,`app_registry`,{
+  const GITHUB_OAUTH_TOKEN = new CfnParameter(this,"GITHUBOAUTHTOKEN",{type:"String"});
+  const GITHUB_USER = new CfnParameter(this,"GITHUBUSER",{type:"String"});
+  const GITHUB_REPO = new CfnParameter(this,"GITHUBREPO",{type:"String"});
+  const GITHUB_BRANCH = new CfnParameter(this,"GITHUBBRANCH",{type:"String"});
+ 
+  /*const app_registry = new ecr.Repository(this,`app_registry`,{
     repositoryName:APP_IMAGE_NAME.valueAsString,
     imageScanOnPush: true
-  });
-  //const base_registry = ecr.Repository.fromRepositoryName(this,`base_repo`,BASE_REPO.valueAsString)
+  });*/
+  const app_registry = ecr.Repository.fromRepositoryName(this,`app_registry`,APP_IMAGE_NAME.valueAsString)
 
-  //create a roleARN for codebuild 
   const buildRole = new iam.Role(this, 'AppCodeBuildDeployRole',{
-    roleName: "AppCodeBuildDeployRole",
+    roleName: process.env.AWS_REGION+"AppCodeBuildDeployRole",
     assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
   });
   
   buildRole.addToPolicy(new iam.PolicyStatement({
     resources: ['*'],
-    actions: ['ssm:*'],
+    actions: ['ssm:PutParameter'],
   }));
     
   const app_image_buildx = new codebuild.Project(this, `AppImageBuild`, {
@@ -84,7 +81,7 @@ export class AppPipelineStack extends Stack {
         version: "0.2",
         env: {
           'exported-variables': [
-            'AWS_ACCOUNT_ID','AWS_REGION','APP_IMAGE_NAME','APP_IMAGE_ARM_TAG'
+            'AWS_ACCOUNT_ID','AWS_REGION','APP_IMAGE_NAME','APP_IMAGE_TAG'
           ],
         },
         phases: {
@@ -93,8 +90,8 @@ export class AppPipelineStack extends Stack {
               `export AWS_ACCOUNT_ID="${this.account}"`,
               `export AWS_REGION="${this.region}"`,
               `export APP_IMAGE_NAME="${APP_IMAGE_NAME.valueAsString}"`,
-              `export APP_IMAGE_ARM_TAG="${APP_IMAGE_ARM_TAG.valueAsString}"`,
-              `chmod +x ./build.sh && ./build.sh`
+              `export APP_IMAGE_TAG="${APP_IMAGE_ARM_TAG.valueAsString}"`,
+              `chmod +x ./simple-multiarch-app/build.sh && ./simple-multiarch-app/build.sh`
             ],
           }
         },
@@ -114,7 +111,7 @@ export class AppPipelineStack extends Stack {
         version: "0.2",
         env: {
           'exported-variables': [
-            'AWS_ACCOUNT_ID','AWS_REGION','APP_IMAGE_NAME','APP_IMAGE_AMD_TAG'
+            'AWS_ACCOUNT_ID','AWS_REGION','APP_IMAGE_NAME','APP_IMAGE_TAG'
           ],
         },
         phases: {
@@ -123,8 +120,8 @@ export class AppPipelineStack extends Stack {
               `export AWS_ACCOUNT_ID="${this.account}"`,
               `export AWS_REGION="${this.region}"`,
               `export APP_IMAGE_NAME="${APP_IMAGE_NAME.valueAsString}"`,
-              `export APP_IMAGE_AMD_TAG="${APP_IMAGE_AMD_TAG.valueAsString}"`,
-              `chmod +x ./build.sh && ./build.sh`
+              `export APP_IMAGE_TAG="${APP_IMAGE_AMD_TAG.valueAsString}"`,
+              `chmod +x ./simple-multiarch-app/build.sh && ./simple-multiarch-app/build.sh`
             ],
           }
         },
@@ -156,7 +153,7 @@ export class AppPipelineStack extends Stack {
               `export APP_IMAGE_AMD_TAG="${APP_IMAGE_AMD_TAG.valueAsString}"`,
               `export APP_IMAGE_ARM_TAG="${APP_IMAGE_ARM_TAG.valueAsString}"`,
               `export APP_IMAGE_TAG="${APP_IMAGE_TAG.valueAsString}"`,
-              `chmod +x ./assemble_multiarch_image.sh && ./assemble_multiarch_image.sh`
+              `chmod +x ./simple-multiarch-app/assemble_multiarch_image.sh && ./simple-multiarch-app/assemble_multiarch_image.sh`
             ],
           }
         },
@@ -174,65 +171,48 @@ export class AppPipelineStack extends Stack {
   app_registry.grantPullPush(app_image_assembly.grantPrincipal);
 
   // here we define our pipeline and put together the assembly line
-  const sourceOuput = new codepipeline.Artifact();
+  const sourceOutput = new codepipeline.Artifact();
 
   const appbuildpipeline = new codepipeline.Pipeline(this,`AppBasePipeline`);
+  
   appbuildpipeline.addStage({
-    stageName: 'Source',
+    stageName: 'gitHubSource',
     actions: [
-      new codepipeline_actions.CodeCommitSourceAction({
-        actionName: 'CodeCommit_Source',
-        repository: app_gitrepo,
-        output: sourceOuput,
-        branch: 'main'
+      new codepipeline_actions.GitHubSourceAction({
+        actionName: 'gitHub_Source',
+        owner: GITHUB_USER.valueAsString,
+        repo: GITHUB_REPO.valueAsString,
+        branch: GITHUB_BRANCH.valueAsString,
+        output: sourceOutput,
+        //oauthToken: SecretValue.secretsManager("githubtoken",{jsonField: "token"}),
+        oauthToken: SecretValue.unsafePlainText(GITHUB_OAUTH_TOKEN.valueAsString),
+        trigger: codepipeline_actions.GitHubTrigger.WEBHOOK
       })
       ]
-  });
-
+  }); 
+ 
   appbuildpipeline.addStage({
     stageName: 'AppImageBuild',
     actions: [
       new codepipeline_actions.CodeBuildAction({
         actionName: 'AppImageArmBuild',
-        input: sourceOuput,
+        input: sourceOutput,
         runOrder: 1,
         project: app_image_arm_build
       }),
       new codepipeline_actions.CodeBuildAction({
         actionName: 'AppImageAmdBuild',
-        input: sourceOuput,
+        input: sourceOutput,
         runOrder: 1,
         project: app_image_amd_build
       }),
       new codepipeline_actions.CodeBuildAction({
           actionName: 'AssembleAppBuilds',
-          input: sourceOuput,
+          input: sourceOutput,
           runOrder: 2,
           project: app_image_assembly
         })
     ]
   });
-  /*const appbuildxpipeline = new codepipeline.Pipeline(this,`BuildXAppPipeline`);
-  appbuildxpipeline.addStage({
-    stageName: 'Source',
-    actions: [
-      new codepipeline_actions.CodeCommitSourceAction({
-        actionName: 'CodeCommit_Source',
-        repository: app_gitrepo,
-        output: sourceOuput,
-        branch: 'main'
-      })
-      ]
-  });
-  appbuildxpipeline.addStage({
-    stageName: 'AppImageBuildX',
-    actions: [
-       new codepipeline_actions.CodeBuildAction({
-         actionName: 'Build_Code',
-         input: sourceOuput,
-         project: app_image_buildx
-       }),
-       ]
-  });*/
   }
 }
