@@ -1,5 +1,4 @@
 #!/bin/bash -x
-npm install cdk-nag
 npm install -g aws-cdk@latest
 npm install aws-cdk-lib
 cdk bootstrap aws://$AWS_ACCOUNT_ID/$AWS_REGION

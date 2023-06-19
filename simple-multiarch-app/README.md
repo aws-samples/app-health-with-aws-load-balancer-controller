@@ -17,13 +17,14 @@ export APP_IMAGE_NAME=simplemultiarchimage
 export APP_IMAGE_TAG=multiarch-py3
 export APP_IMAGE_ARM_TAG=multiarch-py3-arm
 export APP_IMAGE_AMD_TAG=multiarch-py3-amd
-export CLUSTER_NAME=grv-use1
-export KARPENTER_VERSION=v0.27.0
+export GITHUB_USER=yahavb
+export GITHUB_BRANCH=main
+export GITHUB_REPO=app-health-with-aws-load-balancer-controller
+export CLUSTER_NAME=grv-usw2
 export GITHUB_USER=yahavb
 export GITHUB_BRANCH=main
 export GITHUB_REPO=app-health-with-aws-load-balancer-controller
 export GITHUB_OAUTH_TOKEN=create classic token - Settings->Developer settings -> Tokens (classic)
-export TEMPOUT=$(mktemp)
 ```
 
 * Enable multi-arch builds (linux/arm64 and linux/amd64)

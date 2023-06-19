@@ -24,28 +24,12 @@ export class AppPipelineStack extends Stack {
   const GITHUB_REPO = new CfnParameter(this,"GITHUBREPO",{type:"String"});
   const GITHUB_BRANCH = new CfnParameter(this,"GITHUBBRANCH",{type:"String"});
  
-  /* 
-  const secret = sm.Secret.fromSecretAttributes(this,'ImportedSecret',{
-    secretCompleteArn:
-      "arn:aws:secretsmanager:us-west-2:907513986313:secret:lyra-github-token-BMUCM4"
-  });*/
-  
-  
-  //codecommit repository that will contain the containerized app to build
-  /*const app_gitrepo = new codecommit.Repository(this, `app_gitrepo`, {
-    repositoryName:APP_IMAGE_NAME.valueAsString,
-    description: "Git repository for the pipeline, includes all the build phases",
-    code: codecommit.Code.fromDirectory('./','main'),
-  });*/
-  const app_gitrepo = codecommit.Repository.fromRepositoryName(this,`gitrepo`,APP_IMAGE_NAME.valueAsString)
-    
   /*const app_registry = new ecr.Repository(this,`app_registry`,{
     repositoryName:APP_IMAGE_NAME.valueAsString,
     imageScanOnPush: true
   });*/
   const app_registry = ecr.Repository.fromRepositoryName(this,`app_registry`,APP_IMAGE_NAME.valueAsString)
 
-  //create a roleARN for codebuild 
   const buildRole = new iam.Role(this, 'AppCodeBuildDeployRole',{
     roleName: process.env.AWS_REGION+"AppCodeBuildDeployRole",
     assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
@@ -181,27 +165,14 @@ export class AppPipelineStack extends Stack {
     ),
   });
     
-  //we allow the buildProject principal to push images to ecr
   app_registry.grantPullPush(app_image_buildx.grantPrincipal);
   app_registry.grantPullPush(app_image_arm_build.grantPrincipal);
   app_registry.grantPullPush(app_image_amd_build.grantPrincipal);
   app_registry.grantPullPush(app_image_assembly.grantPrincipal);
 
-  // here we define our pipeline and put together the assembly line
   const sourceOutput = new codepipeline.Artifact();
 
   const appbuildpipeline = new codepipeline.Pipeline(this,`AppBasePipeline`);
-  /*appbuildpipeline.addStage({
-    stageName: 'CodeCommitSource',
-    actions: [
-      new codepipeline_actions.CodeCommitSourceAction({
-        actionName: 'CodeCommit_Source',
-        repository: app_gitrepo,
-        output: sourceOutput,
-        branch: 'main'
-      })
-      ]
-  });*/
   
   appbuildpipeline.addStage({
     stageName: 'gitHubSource',
@@ -212,8 +183,9 @@ export class AppPipelineStack extends Stack {
         repo: GITHUB_REPO.valueAsString,
         branch: GITHUB_BRANCH.valueAsString,
         output: sourceOutput,
-        oauthToken: SecretValue.unsafePlainText(GITHUB_OAUTH_TOKEN.valueAsString)
-        //oauthToken: secret.secretValue
+        //oauthToken: SecretValue.secretsManager("githubtoken",{jsonField: "token"}),
+        oauthToken: SecretValue.unsafePlainText(GITHUB_OAUTH_TOKEN.valueAsString),
+        trigger: codepipeline_actions.GitHubTrigger.WEBHOOK
       })
       ]
   }); 
