@@ -3,7 +3,6 @@ kind: Provisioner
 metadata:
   name: tlvsummit23amd
 spec:
-  weight: 50
   requirements:
   - key: karpenter.k8s.aws/instance-generation
     operator: In
