@@ -1,6 +1,6 @@
 # How to rapidly scale your application with ALB on EKS (without losing traffic)
 
-For scalable HTTP-based applications, your application servers Kuberenetes pods need to expand and shrink their processing capacity regularly in order to meet user demand efficiently. AWS Application Load Balancer automatically distributes your incoming traffic. 
+FFor scalable HTTP-based applications, your application servers Kuberenetes pods need to expand and shrink their processing capacity regularly in order to meet user demand efficiently. AWS Application Load Balancer automatically distributes your incoming traffic. 
 
 When redundant capacity is removed due to reduced demand, the application might briefly interrupt users and, on a large scale, these interruptions might be painful. Therefore, we would like to build a robust architecture that allows the application resource to scale down gracefully and minimise user impact. Achieving graceful shutdown requires joint configuration in the application, Kubernetes, and the ALB's target groups. AWS Load Balancer controller supports [Pod readiness gates](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/deploy/pod_readiness_gate/) to indicate that pod is registered to the ALB/NLB and healthy to receive traffic. The controller automatically injects the necessary readiness gate configuration to the pod spec via mutating webhook during pod creation.
 
