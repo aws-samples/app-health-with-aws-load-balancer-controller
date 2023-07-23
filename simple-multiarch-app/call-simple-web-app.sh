@@ -2,7 +2,7 @@
 TIMEFORMAT=' %R'
 while true
 do
-  app_ret=`curl -o /dev/null -w '%{http_code}' -sL ${APP_URL}/runtime/` 
+  app_ret=`time curl -o /dev/null -w '%{http_code}' -sL ${APP_URL}/runtime/` 
   http_code=`echo $app_ret| awk '{print $1}'`
   http_response_time=`echo $app_ret| awk '{print $2}'`
   if [ "$http_code" == 200 ]; then
