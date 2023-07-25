@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash 
 cd /usr/src/app/
 n=$NUM_OF_LOAD_THREADS
 for ((i=1 ; i<=$n ; i++))
