@@ -25,6 +25,7 @@ export GITHUB_USER=yahavb
 export GITHUB_BRANCH=main
 export GITHUB_REPO=app-health-with-aws-load-balancer-controller
 export GITHUB_OAUTH_TOKEN=create classic token - Settings->Developer settings -> Tokens (classic)
+export ALB_ID="app/simplemultiarchapp/5916a79dfe087869"
 ```
 
 * Enable multi-arch builds (linux/arm64 and linux/amd64)
@@ -215,26 +216,50 @@ Configure the `ARM_APP_URL` and `AMD_APP_URL` with the ALB address (previous ste
 kubectl apply -f app-loader.yaml
 ```
 
-* Let it run for an hour and observe the CW target group metric `HTTPCode_Target_2XX_Count` under `AWS/ApplicationELB` to assess the application throughput among the two target groups. 
+* Let it run for an hour and observe the CW target group metric `HTTPCode_Target_2XX_Count` and `TargetResponseTime` under `AWS/ApplicationELB` to assess the application throughput among the two target groups. Goal is to find the throughput at breaking latency as described in [graviton performance runbook](https://github.com/aws/aws-graviton-getting-started/blob/main/perfrunbook/defining_your_benchmark.md#throughput-at-breaking-latency)
 
-* Multi-Node test - add [HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) that will scale the number of pods to see how Graviton throughput scales across many nodes
+* Multi-Node test - add [HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) and [KEDA](https://keda.sh) that will scale the number of pods based on application latency limits to see how Graviton throughput scales across many nodes
 ```
-kubectl autoscale deploy armsimplemultiarchapp --cpu-percent=90 --min=1 --max=100
-kubectl autoscale deploy amdsimplemultiarchapp --cpu-percent=90 --min=1 --max=100
+cat simplemultiarchapp_keda_hpa.yaml | envsubst | kubectl apply -f -
+```
+
+Note that our KEDA-based HPA is configured to bring more pods when the latency break point crossed (300ms) with the following config:
+
+```yaml
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: simplemultiarchapp-hpa
+  namespace: default
+spec:
+…
+  minReplicaCount: 10        
+  maxReplicaCount: 100       
+  triggers:                 # Trigger activate the deployment
+    - type: aws-cloudwatch
+      metadata:
+        namespace: "AWS/ApplicationELB"
+        dimensionName: "LoadBalancer"
+        dimensionValue: "app/simplemultiarchapp/5916a79dfe087869"
+        metricName: "TargetResponseTime"
+        targetMetricValue: "0.3"
 ```
 
 ## Results
 ### Single-node load test
-![Single-node load test - CPU usage and App througput - c7g.large and c6a.large](./single-node-load-baseline.png)
+![Single-node load test - CPU usage and App througput - c7g.large and c6i.large](./single-node-load-baseline.png)
+![Single-node load test - Latency - c7g.large and c6i.large](./single-node-latency-load-baseline.png) 
 
 ### Multi-node load test
 ![Multi-node load test - App througput - c7g.large and c6a.large](./multi-node-load-throughput.png)
+![Multi-node load test - App latency - c7g.large and c6a.large](./multi-node-load-latency.png)
 ![Multi-node load test - Num of pods/nodes - c7g.large and c6a.large](./multi-node-load-nodes.png)
+![Multi-node load test - App latency - c7g.large and c6a.large](./multi-node-load-nodes.png)
 
 ## Analysis
 The single-node test is designed to test the application's throughput under minor and significant loads. There is small difference in throughput under minor load (<70%) but app throughput that runs on Graviton is between 30%-50% higher than app throughput that runs on Intel under heavy load >70%. That's attributed to the minimal overhead of context-switch in Graviton compared to Intel's simultaneous multithreading. 
 
-We consider the load valid until the application fails and returns HTTP 5XX for more than 1% of the load. We noticed that the X86-based app fails when the CPU Utilization crosses 80% and the Graviton crosses 90%. 
+We consider the load valid until it hits the latency break point. We noticed that the X86-based app fails when the CPU Utilization crosses 80% and the Graviton crosses 90%. 
 
 In the multi-node test, similar app throughput is tested across 50 nodes, which translates into cost. When the HPA threshold is crossed during >90% load, we see 30% better Graviton utilization, 56 Intel nodes compared to 43 Graviton nodes to achieve the same throughput. 
 
