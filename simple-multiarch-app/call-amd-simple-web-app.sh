@@ -1,5 +1,4 @@
-#!/bin/bash -x
-
+#!/bin/bash
 while true
 do
   ret=`curl -o /dev/null -w '%{http_code}' -sL ${AMD_APP_URL}/runtime/`

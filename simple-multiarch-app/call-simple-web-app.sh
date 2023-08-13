@@ -1,8 +1,8 @@
-#!/bin/bash -x
-
+#!/bin/bash
 while true
 do
-  ret=`curl -o /dev/null -w '%{http_code}' -sL ${ARM_APP_URL}/runtime/` &
-  ret=`curl -o /dev/null -w '%{http_code}' -sL ${AMD_APP_URL}/runtime/`
+  cmd="curl -o /dev/null -sL ${APP_URL}/runtime/" 
+  http_response_time=`TIMEFORMAT="%R"; { time $cmd; } 2>&1`
+  aws cloudwatch put-metric-data --metric-name http_response_time --namespace ${DEPLOY_NAME} --value $http_response_time
   sleep $SLEEP_BETWEEN_CYCLE
 done
