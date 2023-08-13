@@ -247,21 +247,19 @@ spec:
 
 ## Results
 ### Single-node load test
-![Single-node load test - CPU usage and App througput - c7g.large and c6i.large](./single-node-load-baseline.png)
+![Single-node load test - App througput - c7g.large and c6i.large](./single-node-load-baseline.png)
 ![Single-node load test - Latency - c7g.large and c6i.large](./single-node-latency-load-baseline.png) 
 
 ### Multi-node load test
-![Multi-node load test - App througput - c7g.large and c6a.large](./multi-node-load-throughput.png)
-![Multi-node load test - App latency - c7g.large and c6a.large](./multi-node-load-latency.png)
-![Multi-node load test - Num of pods/nodes - c7g.large and c6a.large](./multi-node-load-nodes.png)
-![Multi-node load test - App latency - c7g.large and c6a.large](./multi-node-load-nodes.png)
+![Multi-node load test - App througput - c7g.large and c6i.large](./multi-node-load-throughput.png)
+![Multi-node load test - App latency - c7g.large and c6i.large](./multi-node-load-latency.png)
 
 ## Analysis
-The single-node test is designed to test the application's throughput under minor and significant loads. There is small difference in throughput under minor load (<70%) but app throughput that runs on Graviton is between 30%-50% higher than app throughput that runs on Intel under heavy load >70%. That's attributed to the minimal overhead of context-switch in Graviton compared to Intel's simultaneous multithreading. 
+The single-node test is designed to test the application's throughput under minor and significant loads. There is small difference in throughput under minor load (<70%) under <300 ms response time but app throughput that runs on Graviton is between 30%-50% higher than app throughput that runs on Intel under heavy load >70%. That's attributed to the minimal overhead of context-switch in Graviton compared to Intel's simultaneous multithreading. 
 
-We consider the load valid until it hits the latency break point. We noticed that the X86-based app fails when the CPU Utilization crosses 80% and the Graviton crosses 90%. 
+We consider the load valid until it hits the latency break point (300 ms). We noticed that the X86-based app fails when the CPU Utilization crosses 80% and the Graviton crosses 90%. 
 
-In the multi-node test, similar app throughput is tested across 50 nodes, which translates into cost. When the HPA threshold is crossed during >90% load, we see 30% better Graviton utilization, 56 Intel nodes compared to 43 Graviton nodes to achieve the same throughput. 
+In the multi-node test, similar app throughput is tested across 50 nodes, which translates into cost. When the Keda-based HPA threshold is crossed 300ms latency, we see 30% better Graviton utilization, 56 Intel nodes compared to 43 Graviton nodes to achieve the same throughput. 
 
 ## Conclusion
 
