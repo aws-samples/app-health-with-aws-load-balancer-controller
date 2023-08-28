@@ -1,0 +1,31 @@
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: amd-simplemultiarchapp-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: amdsimplemultiarchapp       # Name of deployment you want to autoscale; Must be in same namespace as scaled object
+  pollingInterval:  30      # Optional. Default: 30; the interval to check each trigger on
+  cooldownPeriod:   300     # Optional. Default: 300; the period to wait after the last trigger reported active before scaling the deployment back to minReplicaCount
+  fallback:
+    failureThreshold: 3
+    replicas: 2
+  minReplicaCount: 10        # Optional. Default: 0; minimum number of replicas that KEDA will scale the deployment down to
+  maxReplicaCount: 100       # Optional. Default: 100; the maximum number of replicas that KEDA will scale the deployment out to
+  triggers:                 # Trigger activate the deployment
+    - type: aws-cloudwatch
+      metadata:
+        namespace: "AWS/ApplicationELB"
+        dimensionName: "LoadBalancer"
+        dimensionValue: $ALB_ID
+        metricName: "TargetResponseTime"
+        targetMetricValue: "0.3"
+        minMetricValue: "0"
+        metricStat: "Average"
+        metricStatPeriod: "300"
+        awsRegion: $AWS_REGION
+        identityOwner: operator
